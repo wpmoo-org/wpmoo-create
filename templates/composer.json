@@ -1,0 +1,21 @@
+{
+  "name": "wpmoo-plugins/{{TEXT_DOMAIN}}",
+  "description": "{{PROJECT_DESCRIPTION}}",
+  "license": "GPL-2.0-or-later",
+  "authors": [
+    {
+      "name": "{{AUTHOR_NAME}}",
+      "email": "{{AUTHOR_EMAIL}}"
+    }
+  ],
+  "require": {
+    "php": ">=7.4",
+    "wpmoo/wpmoo": "dev-main"
+  },
+  "autoload": {
+    "psr-4": {
+      "{{NAMESPACE}}\
+": "src/"
+    }
+  }
+}
