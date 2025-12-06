@@ -1,0 +1,25 @@
+{
+  "name": "create-wpmoo",
+  "version": "1.0.0",
+  "description": "A CLI tool to create a new WPMoo-based plugin or theme.",
+  "main": "index.js",
+  "type": "module",
+  "bin": {
+    "create-wpmoo": "index.js"
+  },
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "wpmoo",
+    "wordpress",
+    "scaffolding"
+  ],
+  "author": "WPMoo Team <hello@wpmoo.org>",
+  "license": "MIT",
+  "dependencies": {
+    "chalk": "^5.6.2",
+    "fs-extra": "^11.3.2",
+    "inquirer": "^13.0.2"
+  }
+}
