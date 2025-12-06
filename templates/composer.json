@@ -10,8 +10,14 @@
   ],
   "require": {
     "php": ">=7.4",
-    "wpmoo/wpmoo": "dev-main"
+    "wpmoo/wpmoo": "*"
   },
+  "repositories": [
+    {
+      "type": "path",
+      "url": "../../wpmoo-org/wpmoo"
+    }
+  ],
   "autoload": {
     "psr-4": {
       "{{NAMESPACE}}\\": "src/"
