@@ -35,9 +35,14 @@ async function run() {
         },
         {
             type: 'input',
-            name: 'author',
-            message: 'Enter Author Name <email@example.com>:',
-            validate: (input) => /.+ <.+@.+>/.test(input) ? true : 'Please use the format "Name <email@example.com>".',
+            name: 'authorName',
+            message: 'Enter Author Name:',
+        },
+        {
+            type: 'input',
+            name: 'authorEmail',
+            message: 'Enter Author Email:',
+            validate: (input) => /.+@.+/.test(input) ? true : 'Please enter a valid email address.',
         },
         {
             type: 'input',
@@ -70,14 +75,9 @@ async function run() {
         },
     ]);
 
-    const { projectType, projectName, projectDescription, author, projectNamespace, textDomain, mainFileName, initialTheme } = answers;
+    const { projectType, projectName, projectDescription, authorName, authorEmail, projectNamespace, textDomain, mainFileName, initialTheme } = answers;
     const projectSlug = slugify(projectName);
     const targetDir = path.resolve(process.cwd(), projectSlug);
-
-    // Parse author name and email
-    const authorMatch = author.match(/(.+) <(.+)>/);
-    const authorName = authorMatch ? authorMatch[1] : author;
-    const authorEmail = authorMatch ? authorMatch[2] : '';
 
     console.log('');
     console.log(chalk.cyan('--- Project Summary ---'));
@@ -86,7 +86,7 @@ async function run() {
     console.log(`  Directory:    ${chalk.bold(projectSlug)}`);
     console.log(`  Namespace:    ${chalk.bold(projectNamespace)}`);
     console.log(`  Text Domain:  ${chalk.bold(textDomain)}`);
-    console.log(`  Author:       ${chalk.bold(author)}`);
+    console.log(`  Author:       ${chalk.bold(authorName)} <${chalk.bold(authorEmail)}>`);
     if (projectType === 'Plugin') {
         console.log(`  Main File:    ${chalk.bold(mainFileName)}`);
     }
