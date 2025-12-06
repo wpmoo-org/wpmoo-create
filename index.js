@@ -21,6 +21,7 @@ async function run() {
             name: 'projectType',
             message: 'Are you creating a Theme or a Plugin?',
             choices: ['Plugin', 'Theme'],
+            default: 'Plugin',
         },
         {
             type: 'input',
@@ -131,7 +132,7 @@ async function run() {
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), answers, authorName, authorEmail);
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php'), path.join(targetDir, 'functions.php'), answers, authorName, authorEmail);
     }
-    
+
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
     try {
@@ -162,7 +163,7 @@ async function copyAndProcessFile(sourcePath, destPath, answers, authorName, aut
         .replace(/{{AUTHOR_EMAIL}}/g, authorEmail)
         .replace(/{{NAMESPACE}}/g, answers.projectNamespace)
         .replace(/{{TEXT_DOMAIN}}/g, answers.textDomain);
-    
+
     // Specific replacements that might not be available in all templates
     if (projectSlug) {
         content = content.replace(/{{PROJECT_SLUG}}/g, projectSlug);
