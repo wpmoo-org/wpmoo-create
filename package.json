@@ -17,6 +17,10 @@
   ],
   "author": "WPMoo Team <hello@wpmoo.org>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/wpmoo-org/wpmoo-create.git"
+  },
   "dependencies": {
     "chalk": "^5.6.2",
     "fs-extra": "^11.3.2",
