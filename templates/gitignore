@@ -1,0 +1,63 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Diagnostic reports (https://nodejs.org/api/report.html)
+.report/
+
+# Node.js
+# Caching for npm modules
+# https://docs.npmjs.com/cli/v9/using-npm/caching
+.npm/
+.node_modules_flexstash/
+
+# Node.js binary
+node_modules/
+
+# dotenv environment variables file
+.env
+.env.development
+.env.test
+.env.production
+
+# Mac OS
+.DS_Store
+
+# PHP
+/vendor/
+
+# WordPress-specific cache and generated files
+/wp-content/cache/
+/wp-content/uploads/
+/wp-content/blogs.dir/ # Multisite
+/wp-content/upgrade/
+/wp-content/backup-*/
+*.sql
+*.zip
+*.tar
+*.gz
+
+# Composer
+/composer.lock
+/vendor/
+
+# PHPUnit
+.phpunit.result.cache
+
+# WPMoo
+/dist/
+/wpmoo-config.yml
+/wpmoo-config.dev.yml
+/wpmoo-config.prod.yml
+
+# IDE specific files
+.idea/
+.vscode/
+
+# Build outputs
+/build/

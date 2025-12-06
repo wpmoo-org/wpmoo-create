@@ -1,0 +1,19 @@
+# Core project metadata.
+project:
+  name: '{{PROJECT_NAME}}'
+  namespace: '{{NAMESPACE}}'
+  text_domain: '{{TEXT_DOMAIN}}'
+
+# Development environment specific settings.
+dev:
+  browser_sync:
+    enabled: true
+    url: "http://{{PROJECT_SLUG}}.test" # dynamic URL based on project slug
+    port: 3000
+    open: true
+    notify: false
+    files:
+      - "./**/*.php"
+      - "./assets/js/**/*.js"
+      - "./assets/css/**/*.css"
+  theme: "amber"
