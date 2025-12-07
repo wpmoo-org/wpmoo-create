@@ -26,7 +26,7 @@ async function run() {
         {
             type: 'input',
             name: 'projectName',
-            message: (answers) => `Enter your ${answers.projectType} Name:`,
+            message: (answers) => `Enter your ${answers.projectType} Name`,
             validate: (input) => input ? true : 'Project name cannot be empty.',
         },
         {
@@ -115,22 +115,58 @@ async function run() {
 
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const templateBaseDir = path.join(__dirname, 'templates');
+    
+    // --- Calculate relative paths for local development ---
+    const wpmooOrgDir = path.resolve(__dirname, '..'); // Points to wpmoo-org
+    const wpmooDir = path.join(wpmooOrgDir, 'wpmoo');
+    const wpmooCliDir = path.join(wpmooOrgDir, 'wpmoo-cli');
+    const wpmooCodingStandardsDir = path.join(wpmooOrgDir, 'wpmoo-coding-standards');
+
+    const relativePathToWpmoo = path.relative(targetDir, wpmooDir);
+    const relativePathToWpmooCli = path.relative(targetDir, wpmooCliDir);
+    const relativePathToWpmooCodingStandards = path.relative(targetDir, wpmooCodingStandardsDir);
+
+    console.log(chalk.yellow(`\n--- Debug Info ---`));
+    console.log(chalk.yellow(`Target Dir: ${targetDir}`));
+    console.log(chalk.yellow(`WPMoo Dir: ${wpmooDir}`));
+    console.log(chalk.yellow(`Relative Path to WPMoo: ${relativePathToWpmoo}`));
+    console.log(chalk.yellow(`WPMoo CLI Dir: ${wpmooCliDir}`));
+    console.log(chalk.yellow(`Relative Path to WPMoo CLI: ${relativePathToWpmooCli}`));
+    console.log(chalk.yellow(`WPMoo Coding Standards Dir: ${wpmooCodingStandardsDir}`));
+    console.log(chalk.yellow(`Relative Path to WPMoo Coding Standards: ${relativePathToWpmooCodingStandards}`));
+    console.log(chalk.yellow(`------------------\n`));
+
+    const placeholders = {
+        'PROJECT_TYPE': projectType.toLowerCase(),
+        'PROJECT_NAME': projectName,
+        'PROJECT_DESCRIPTION': projectDescription,
+        'AUTHOR_NAME': authorName,
+        'AUTHOR_EMAIL': authorEmail,
+        'NAMESPACE': projectNamespace,
+        'TEXT_DOMAIN': textDomain,
+        'MAIN_FILE_NAME': mainFileName || '',
+        'INITIAL_THEME': initialTheme,
+        'PROJECT_SLUG': projectSlug,
+        'PATH_TO_WPMOO': relativePathToWpmoo,
+        'PATH_TO_WPMOO_CLI': relativePathToWpmooCli,
+        'PATH_TO_WPMOO_CODING_STANDARDS': relativePathToWpmooCodingStandards,
+    };
 
     // Copy common templates
-    await copyAndProcessFile(path.join(templateBaseDir, 'composer.json'), path.join(targetDir, 'composer.json'), answers, authorName, authorEmail);
-    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config.yml'), path.join(targetDir, 'wpmoo-config.yml'), answers, authorName, authorEmail, projectSlug, initialTheme);
-    await copyAndProcessFile(path.join(templateBaseDir, 'gitignore'), path.join(targetDir, '.gitignore'), answers, authorName, authorEmail);
-    await copyAndProcessFile(path.join(templateBaseDir, 'README.md'), path.join(targetDir, 'README.md'), answers, authorName, authorEmail, projectSlug, projectType);
+    await copyAndProcessFile(path.join(templateBaseDir, 'composer.json'), path.join(targetDir, 'composer.json'), placeholders);
+    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config.yml'), path.join(targetDir, 'wpmoo-config.yml'), placeholders);
+    await copyAndProcessFile(path.join(templateBaseDir, 'gitignore'), path.join(targetDir, '.gitignore'), placeholders);
+    await copyAndProcessFile(path.join(templateBaseDir, 'README.md'), path.join(targetDir, 'README.md'), placeholders);
 
     if (projectType === 'Plugin') {
         // Copy plugin specific templates
-        await fs.ensureDir(path.join(targetDir, 'src')); // Create src dir for plugin code
-        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php'), path.join(targetDir, mainFileName), answers, authorName, authorEmail);
-        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'src', 'HelloWorld.php'), path.join(targetDir, 'src', 'HelloWorld.php'), answers, authorName, authorEmail);
+        await fs.ensureDir(path.join(targetDir, 'src'));
+        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php'), path.join(targetDir, mainFileName), placeholders);
+        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'src', 'HelloWorld.php'), path.join(targetDir, 'src', 'HelloWorld.php'), placeholders);
     } else if (projectType === 'Theme') {
         // Copy theme specific templates
-        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), answers, authorName, authorEmail);
-        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php'), path.join(targetDir, 'functions.php'), answers, authorName, authorEmail);
+        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), placeholders);
+        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php'), path.join(targetDir, 'functions.php'), placeholders);
     }
 
     // Run composer install
@@ -153,29 +189,18 @@ async function run() {
 }
 
 // Helper function to copy and process template files
-async function copyAndProcessFile(sourcePath, destPath, answers, authorName, authorEmail, projectSlug = '', initialTheme = '', projectType = '') {
+async function copyAndProcessFile(sourcePath, destPath, placeholders) {
     let content = await fs.readFile(sourcePath, 'utf8');
-
-    content = content
-        .replace(/{{PROJECT_NAME}}/g, answers.projectName)
-        .replace(/{{PROJECT_DESCRIPTION}}/g, answers.projectDescription)
-        .replace(/{{AUTHOR_NAME}}/g, authorName)
-        .replace(/{{AUTHOR_EMAIL}}/g, authorEmail)
-        .replace(/{{NAMESPACE}}/g, answers.projectNamespace)
-        .replace(/{{TEXT_DOMAIN}}/g, answers.textDomain);
-
-    // Specific replacements that might not be available in all templates
-    if (projectSlug) {
-        content = content.replace(/{{PROJECT_SLUG}}/g, projectSlug);
+    
+    for (const [key, value] of Object.entries(placeholders)) {
+        const regex = new RegExp(`{{${key}}}`, 'g');
+        content = content.replace(regex, value);
     }
-    if (initialTheme) {
-        content = content.replace(/{{INITIAL_THEME}}/g, initialTheme);
-    }
-    if (projectType) {
-        content = content.replace(/{{PROJECT_TYPE}}/g, projectType.toLowerCase());
-    }
-    if (answers.mainFileName) {
-        content = content.replace(/{{MAIN_FILE_NAME}}/g, answers.mainFileName);
+    
+    if (path.basename(destPath) === 'composer.json') {
+        console.log(chalk.yellow(`--- Generated composer.json content ---`));
+        console.log(chalk.yellow(content));
+        console.log(chalk.yellow(`------------------------------------`));
     }
 
     await fs.writeFile(destPath, content);

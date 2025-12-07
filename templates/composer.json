@@ -2,6 +2,8 @@
   "name": "wpmoo-plugins/{{TEXT_DOMAIN}}",
   "description": "{{PROJECT_DESCRIPTION}}",
   "license": "GPL-2.0-or-later",
+  "minimum-stability": "dev",
+  "prefer-stable": true,
   "authors": [
     {
       "name": "{{AUTHOR_NAME}}",
@@ -12,15 +14,27 @@
     "php": ">=7.4",
     "wpmoo/wpmoo": "*"
   },
+  "require-dev": {
+    "wpmoo/wpmoo-cli": "dev-main",
+    "wpmoo/wpmoo-coding-standards": "dev-main"
+  },
   "repositories": [
     {
       "type": "path",
-      "url": "../../wpmoo-org/wpmoo"
+      "url": "{{PATH_TO_WPMOO}}"
+    },
+    {
+      "type": "path",
+      "url": "{{PATH_TO_WPMOO_CLI}}"
+    },
+    {
+      "type": "path",
+      "url": "{{PATH_TO_WPMOO_CODING_STANDARDS}}"
     }
   ],
   "autoload": {
     "psr-4": {
-      "{{NAMESPACE}}\\": "src/"
+      "{{NAMESPACE}}\": "src/"
     }
   }
 }
