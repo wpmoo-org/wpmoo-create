@@ -191,13 +191,21 @@ async function run() {
             }
         }
 
-        // 3. Create minimal asset structure
-        console.log('  - Creating minimal asset structure...');
-        const scssDir = path.join(targetDir, 'resources', 'scss');
-        await fs.ensureDir(scssDir);
+        // 3. Create asset structure from templates
+        console.log('  - Creating asset structure...');
+        const sourceResourcesDir = path.join(templateBaseDir, 'resources');
+        const destResourcesDir = path.join(targetDir, 'resources');
+        await fs.copy(sourceResourcesDir, destResourcesDir);
+
+        // Post-process the SCSS files that need placeholder replacement
         await copyAndProcessFile(
-            path.join(templateBaseDir, 'resources', 'scss', 'main.scss'), 
-            path.join(scssDir, 'main.scss'), 
+            path.join(destResourcesDir, 'scss', 'main.scss'), 
+            path.join(destResourcesDir, 'scss', 'main.scss'), 
+            placeholders
+        );
+        await copyAndProcessFile(
+            path.join(destResourcesDir, 'scss', 'config', '_settings.scss'), 
+            path.join(destResourcesDir, 'scss', 'config', '_settings.scss'), 
             placeholders
         );
         
