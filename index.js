@@ -66,17 +66,10 @@ async function run() {
             default: (answers) => `${slugify(answers.projectName)}.php`,
             when: (answers) => answers.projectType === 'Plugin',
             validate: (input) => input ? true : 'Main plugin file name cannot be empty.',
-        },
-        {
-            type: 'list',
-            name: 'initialTheme',
-            message: 'Select initial WPMoo theme for development:',
-            choices: ['amber', 'azure', 'blue', 'cyan', 'fuchsia', 'green', 'grey', 'indigo', 'jade', 'lime', 'orange', 'pink', 'pumpkin', 'purple', 'red', 'sand', 'slate', 'violet', 'yellow', 'zinc'],
-            default: 'amber',
-        },
+        }
     ]);
 
-    const { projectType, projectName, projectDescription, authorName, authorEmail, projectNamespace, textDomain, mainFileName, initialTheme } = answers;
+    const { projectType, projectName, projectDescription, authorName, authorEmail, projectNamespace, textDomain, mainFileName } = answers;
     const projectSlug = slugify(projectName);
     const targetDir = path.resolve(process.cwd(), projectSlug);
 
@@ -91,7 +84,6 @@ async function run() {
     if (projectType === 'Plugin') {
         console.log(`  Main File:    ${chalk.bold(mainFileName)}`);
     }
-    console.log(`  Initial Theme: ${chalk.bold(initialTheme)}`);
     console.log('-----------------------');
 
     const { proceed } = await inquirer.prompt([
@@ -135,7 +127,7 @@ async function run() {
         'NAMESPACE': projectNamespace,
         'TEXT_DOMAIN': textDomain,
         'MAIN_FILE_NAME': mainFileName || '',
-        'INITIAL_THEME': initialTheme,
+        'INITIAL_THEME': "amber", // Default to amber
         'PROJECT_SLUG': projectSlug,
         'PATH_TO_WPMOO': relativePathToWpmoo,
         'PATH_TO_WPMOO_CLI': relativePathToWpmooCli,
@@ -192,7 +184,7 @@ async function run() {
         }
 
         // 3. Create asset structure from templates
-        console.log('  - Creating asset structure...');
+        console.log('  - Creating minimal asset structure...');
         const sourceResourcesDir = path.join(templateBaseDir, 'resources');
         const destResourcesDir = path.join(targetDir, 'resources');
         await fs.copy(sourceResourcesDir, destResourcesDir);
