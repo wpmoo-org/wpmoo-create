@@ -107,7 +107,7 @@ async function run() {
 
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const templateBaseDir = path.join(__dirname, 'templates');
-    
+
     // --- Calculate relative paths for local development ---
     const wpmooOrgDir = path.resolve(__dirname, '..');
     const wpmooDir = path.join(wpmooOrgDir, 'wpmoo');
@@ -189,18 +189,19 @@ async function run() {
         const destResourcesDir = path.join(targetDir, 'resources');
         await fs.copy(sourceResourcesDir, destResourcesDir);
 
+        console.log('  - Copying SCSS Config files...');
+        const sourceSassConfigDir = path.join(wpmooVendorDir, 'resources', 'scss', 'config');
+        const destSassConfigDir = path.join(targetDir, 'resources', 'scss', 'config');
+        await fs.copy(sourceSassConfigDir, destSassConfigDir);
+        await fs.copy(sourceFrameworkDir, destFrameworkDir);
+
         // Post-process the SCSS files that need placeholder replacement
         await copyAndProcessFile(
-            path.join(destResourcesDir, 'scss', 'main.scss'), 
-            path.join(destResourcesDir, 'scss', 'main.scss'), 
+            path.join(destResourcesDir, 'scss', 'main.scss'),
+            path.join(destResourcesDir, 'scss', 'main.scss'),
             placeholders
         );
-        await copyAndProcessFile(
-            path.join(destResourcesDir, 'scss', 'config', '_settings.scss'), 
-            path.join(destResourcesDir, 'scss', 'config', '_settings.scss'), 
-            placeholders
-        );
-        
+
         // 4. Run initial scope
         console.log('  - Scoping framework...');
         execSync('php vendor/bin/moo scope', { cwd: targetDir, stdio: 'inherit' });
@@ -225,12 +226,12 @@ async function run() {
 // Helper function to copy and process template files
 async function copyAndProcessFile(sourcePath, destPath, placeholders) {
     let content = await fs.readFile(sourcePath, 'utf8');
-    
+
     for (const [key, value] of Object.entries(placeholders)) {
         const regex = new RegExp(`{{${key}}}`, 'g');
         content = content.replace(regex, value);
     }
-    
+
     await fs.writeFile(destPath, content);
 }
 

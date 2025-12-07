@@ -1,14 +1,7 @@
-// 1. Import your local variable overrides.
-@import 'config/vars';
+@use "sass:map"; // use Sass map module
+@use "config/config"; // load configuration
 
-// 2. Forward your local settings and configure the theme color.
-// You can customize variables in the config/_settings.scss file.
-@forward "config/settings" with (
-  $theme-color: 'amber'
-);
+// Import the core WPMoo framework styles.
+@import 'vendor/wpmoo/wpmoo/resources/scss/wpmoo/index';
 
-// 3. Import the core WPMoo framework styles.
-// This will use your local config overrides.
-@import 'vendor/wpmoo/wpmoo/resources/scss/wpmoo';
-
-// 4. Add your own custom styles below.
+// Add your own custom styles below.
