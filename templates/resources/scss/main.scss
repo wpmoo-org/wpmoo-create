@@ -1,11 +1,14 @@
-// 1. Import your local configuration overrides.
+// 1. Import your local variable overrides.
+@import 'config/vars';
+
+// 2. Forward your local settings and configure the theme color.
 // You can customize variables in the config/_settings.scss file.
 @forward "config/settings" with (
   $theme-color: '{{INITIAL_THEME}}'
 );
 
-// 2. Import the core WPMoo framework styles.
+// 3. Import the core WPMoo framework styles.
 // This will use your local config overrides.
 @import 'vendor/wpmoo/wpmoo/resources/scss/wpmoo';
 
-// 3. Add your own custom styles below.
+// 4. Add your own custom styles below.
