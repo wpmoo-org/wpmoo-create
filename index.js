@@ -164,10 +164,43 @@ async function run() {
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
     try {
-        execSync('composer install', { cwd: targetDir, stdio: 'inherit' });
+        execSync('composer install --dev', { cwd: targetDir, stdio: 'inherit' });
         console.log(chalk.green('✓ Composer dependencies installed.'));
     } catch (error) {
         console.error(chalk.red('✗ Composer install failed:'), error.message);
+        process.exit(1);
+    }
+
+    // --- Post-install setup ---
+    console.log(chalk.blue('\nRunning post-install setup...'));
+    try {
+        const vendorDir = path.join(targetDir, 'vendor');
+        const wpmooVendorDir = path.join(vendorDir, 'wpmoo', 'wpmoo');
+
+        // 1. Copy framework
+        console.log('  - Copying framework files...');
+        const sourceFrameworkDir = path.join(wpmooVendorDir, 'framework');
+        const destFrameworkDir = path.join(targetDir, 'framework');
+        await fs.copy(sourceFrameworkDir, destFrameworkDir);
+
+        // 2. Copy dev config files
+        console.log('  - Copying development config files...');
+        const devConfigFiles = ['.editorconfig', '.prettierrc.json', '.stylelintrc.json', 'phpcs.xml'];
+        for (const configFile of devConfigFiles) {
+            const sourceFile = path.join(wpmooVendorDir, configFile);
+            if (fs.existsSync(sourceFile)) {
+                await fs.copy(sourceFile, path.join(targetDir, configFile));
+            }
+        }
+
+        // 3. Run initial scope
+        console.log('  - Scoping framework...');
+        execSync('php vendor/bin/moo scope', { cwd: targetDir, stdio: 'inherit' });
+
+        console.log(chalk.green('✓ Post-install setup complete.'));
+
+    } catch (error) {
+        console.error(chalk.red('✗ Post-install setup failed:'), error.message);
         process.exit(1);
     }
 
@@ -176,6 +209,7 @@ async function run() {
     console.log(chalk.bold.blue('Next steps:'));
     console.log(`  cd ${projectSlug}`);
     console.log('  php moo dev');
+    console.log(chalk.gray('  (To update the framework, run: php moo update)'));
     console.log(chalk.gray('  (To deploy for production, run: php moo dist)'));
 
 }

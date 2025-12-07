@@ -36,5 +36,10 @@
     "psr-4": {
       "{{NAMESPACE}}\\": "src/"
     }
+  },
+  "scripts": {
+    "post-update-cmd": [
+      "php moo update"
+    ]
   }
 }
