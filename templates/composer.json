@@ -43,8 +43,7 @@
       "@setup-wrapper"
     ],
     "post-update-cmd": [
-      "@setup-wrapper",
-      "php moo update"
+      "@setup-wrapper"
     ]
   }
 }
