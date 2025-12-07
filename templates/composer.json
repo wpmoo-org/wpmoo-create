@@ -15,7 +15,7 @@
     "wpmoo/wpmoo": "*"
   },
   "require-dev": {
-    "wpmoo/wpmoo-cli": "dev-main",
+    "wpmoo/wpmoo-cli": "dev-dev",
     "wpmoo/wpmoo-coding-standards": "dev-main"
   },
   "repositories": [
@@ -34,7 +34,7 @@
   ],
   "autoload": {
     "psr-4": {
-      "{{NAMESPACE}}\": "src/"
+      "{{NAMESPACE}}": "src/"
     }
   }
 }
