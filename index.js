@@ -126,15 +126,7 @@ async function run() {
     const relativePathToWpmooCli = path.relative(targetDir, wpmooCliDir);
     const relativePathToWpmooCodingStandards = path.relative(targetDir, wpmooCodingStandardsDir);
 
-    console.log(chalk.yellow(`\n--- Debug Info ---`));
-    console.log(chalk.yellow(`Target Dir: ${targetDir}`));
-    console.log(chalk.yellow(`WPMoo Dir: ${wpmooDir}`));
-    console.log(chalk.yellow(`Relative Path to WPMoo: ${relativePathToWpmoo}`));
-    console.log(chalk.yellow(`WPMoo CLI Dir: ${wpmooCliDir}`));
-    console.log(chalk.yellow(`Relative Path to WPMoo CLI: ${relativePathToWpmooCli}`));
-    console.log(chalk.yellow(`WPMoo Coding Standards Dir: ${wpmooCodingStandardsDir}`));
-    console.log(chalk.yellow(`Relative Path to WPMoo Coding Standards: ${relativePathToWpmooCodingStandards}`));
-    console.log(chalk.yellow(`------------------\n`));
+
 
     const placeholders = {
         'PROJECT_TYPE': projectType.toLowerCase(),
@@ -197,12 +189,6 @@ async function copyAndProcessFile(sourcePath, destPath, placeholders) {
         content = content.replace(regex, value);
     }
     
-    if (path.basename(destPath) === 'composer.json') {
-        console.log(chalk.yellow(`--- Generated composer.json content ---`));
-        console.log(chalk.yellow(content));
-        console.log(chalk.yellow(`------------------------------------`));
-    }
-
     await fs.writeFile(destPath, content);
 }
 
