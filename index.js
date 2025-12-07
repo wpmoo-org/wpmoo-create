@@ -117,7 +117,7 @@ async function run() {
     const templateBaseDir = path.join(__dirname, 'templates');
     
     // --- Calculate relative paths for local development ---
-    const wpmooOrgDir = path.resolve(__dirname, '..'); // Points to wpmoo-org
+    const wpmooOrgDir = path.resolve(__dirname, '..');
     const wpmooDir = path.join(wpmooOrgDir, 'wpmoo');
     const wpmooCliDir = path.join(wpmooOrgDir, 'wpmoo-cli');
     const wpmooCodingStandardsDir = path.join(wpmooOrgDir, 'wpmoo-coding-standards');
@@ -125,8 +125,6 @@ async function run() {
     const relativePathToWpmoo = path.relative(targetDir, wpmooDir);
     const relativePathToWpmooCli = path.relative(targetDir, wpmooCliDir);
     const relativePathToWpmooCodingStandards = path.relative(targetDir, wpmooCodingStandardsDir);
-
-
 
     const placeholders = {
         'PROJECT_TYPE': projectType.toLowerCase(),
@@ -183,17 +181,29 @@ async function run() {
         const destFrameworkDir = path.join(targetDir, 'framework');
         await fs.copy(sourceFrameworkDir, destFrameworkDir);
 
-        // 2. Copy dev config files
-        console.log('  - Copying development config files...');
-        const devConfigFiles = ['.editorconfig', '.prettierrc.json', '.stylelintrc.json', 'phpcs.xml'];
-        for (const configFile of devConfigFiles) {
-            const sourceFile = path.join(wpmooVendorDir, configFile);
-            if (fs.existsSync(sourceFile)) {
-                await fs.copy(sourceFile, path.join(targetDir, configFile));
+        // 2. Copy dev config files and dirs
+        console.log('  - Copying development config files and directories...');
+        const devItemsToCopy = ['.editorconfig', '.prettierrc.json', '.stylelintrc.json', 'phpcs.xml', '.gitattributes', '.githooks', '.github'];
+        for (const item of devItemsToCopy) {
+            const sourceItem = path.join(wpmooVendorDir, item);
+            if (fs.existsSync(sourceItem)) {
+                await fs.copy(sourceItem, path.join(targetDir, item));
             }
         }
 
-        // 3. Run initial scope
+        // 3. Create minimal asset structure
+        console.log('  - Creating minimal asset structure...');
+        const scssDir = path.join(targetDir, 'resources', 'scss');
+        await fs.ensureDir(scssDir);
+        const mainScssContent = `// Import the core WPMoo framework styles
+// The path is relative to the project root where the build process runs.
+@import 'vendor/wpmoo/wpmoo/resources/scss/wpmoo';
+
+// Add your own custom styles below
+`;
+        await fs.writeFile(path.join(scssDir, 'main.scss'), mainScssContent);
+        
+        // 4. Run initial scope
         console.log('  - Scoping framework...');
         execSync('php vendor/bin/moo scope', { cwd: targetDir, stdio: 'inherit' });
 
