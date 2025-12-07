@@ -1,0 +1,9 @@
+// 1. Define your theme color override.
+// This value comes from the initial setup question.
+$theme-color: '{{INITIAL_THEME}}';
+
+// 2. Import the core WPMoo framework styles.
+// The path is relative to the project root where the build process runs.
+@import 'vendor/wpmoo/wpmoo/resources/scss/wpmoo';
+
+// 3. Add your own custom styles below.

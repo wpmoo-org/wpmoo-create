@@ -195,13 +195,11 @@ async function run() {
         console.log('  - Creating minimal asset structure...');
         const scssDir = path.join(targetDir, 'resources', 'scss');
         await fs.ensureDir(scssDir);
-        const mainScssContent = `// Import the core WPMoo framework styles
-// The path is relative to the project root where the build process runs.
-@import 'vendor/wpmoo/wpmoo/resources/scss/wpmoo';
-
-// Add your own custom styles below
-`;
-        await fs.writeFile(path.join(scssDir, 'main.scss'), mainScssContent);
+        await copyAndProcessFile(
+            path.join(templateBaseDir, 'resources', 'scss', 'main.scss'), 
+            path.join(scssDir, 'main.scss'), 
+            placeholders
+        );
         
         // 4. Run initial scope
         console.log('  - Scoping framework...');
