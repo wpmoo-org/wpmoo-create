@@ -1,7 +1,28 @@
-@use "sass:map"; // use Sass map module
-@use "config/config"; // load configuration
-
 // Import the core WPMoo framework styles.
-@import 'vendor/wpmoo/wpmoo/resources/scss/wpmoo/index';
+// NOTE: Importing the compiled CSS to avoid configuration conflicts with the framework's SCSS modules
+@import 'vendor/wpmoo/wpmoo/assets/css/wpmoo.amber.css';
 
 // Add your own custom styles below.
+
+/*
+ * Plugin-specific customizations
+ * You can override CSS variables here to customize the look and feel
+ * Note: The framework's CSS classes have been automatically scoped to your plugin's text domain
+ * For example: .my-plugin instead of .wpmoo (where my-plugin is your actual text domain)
+ */
+
+/*
+// Example: Customize colors
+.my-plugin {  // Replace 'my-plugin' with your actual text domain
+  --my-plugin-primary-hue: 217;  // Change the primary color hue
+  --my-plugin-form-element-spacing-vertical: 1rem;  // Adjust form element spacing
+}
+*/
+
+/*
+// Example: Additional component styling
+// Since the framework CSS is scoped to your text domain, make sure to prefix selectors
+.my-plugin .your-custom-selector {  // Replace 'my-plugin' with your actual text domain
+  background-color: #custom-color;
+}
+*/
