@@ -1,0 +1,42 @@
+# Core project metadata.
+project:
+  name: '{{PROJECT_NAME}}'
+  namespace: '{{NAMESPACE}}'
+  text_domain: '{{TEXT_DOMAIN}}'
+
+# Development environment specific settings.
+dev:
+  browser_sync:
+    enabled: true
+    url: "http://{{PROJECT_SLUG}}.test" # dynamic URL based on project slug
+    port: 3000
+    open: true
+    notify: false
+    files:
+      - "./**/*.php"
+      - "./assets/js/**/*.js"
+      - "./assets/css/**/*.css"
+  theme: "amber"
+
+# Distribution settings for the WPMoo project.
+dist:
+  theme: "amber"
+  zip:
+    enabled: true
+    filename: "{{TEXT_DOMAIN}}-{{version}}.zip"
+  # Vendor packages to include/exclude in the distribution
+  vendor_packages:
+    include: # List of vendor packages to definitely include
+      - "wpmoo/wpmoo"  # Always include the WPMoo framework
+    exclude:  # List of vendor packages to exclude from distribution
+      - "phpunit/phpunit"  # Don't include testing frameworks
+      - "dealerdirect/phpcodesniffer-composer-installer"  # Don't include development tools
+      - "squizlabs/php_codesniffer"  # Don't include coding standards
+    # Alternative approach: if include list is provided, only those packages are included
+    # If include list is empty, all packages except those in exclude list are included
+
+
+    # How to handle wpmoo/wpmoo package specifically
+    # Options: 'include', 'exclude', 'separate'
+    # 'separate' means the main framework is handled separately in wpmoo-core directory
+    wpmoo_handling: 'separate'
