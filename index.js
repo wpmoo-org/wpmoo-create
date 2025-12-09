@@ -179,7 +179,7 @@ async function run() {
         
         // Use dev-main version for local development
         if (composerJson.require && composerJson.require['wpmoo/wpmoo']) {
-             composerJson.require['wpmoo/wpmoo'] = 'dev-main';
+             composerJson.require['wpmoo/wpmoo'] = 'dev-dev';
         }
         
         await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
