@@ -158,10 +158,9 @@ async function run() {
     }
 
     // Check for local WPMoo framework development directory
-    // Assumes wpmoo-create is running alongside wpmoo-org/wpmoo
-    const localFrameworkPath = path.resolve(process.cwd(), 'wpmoo-org', 'wpmoo');
+    const localFrameworkPath = await findWpmooFrameworkPath(process.cwd());
     
-    if (await fs.pathExists(localFrameworkPath)) {
+    if (localFrameworkPath) {
         console.log(chalk.blue('\nDetected local WPMoo framework at ' + localFrameworkPath));
         console.log('  - Configuring composer to use local framework...');
         
@@ -213,11 +212,27 @@ async function run() {
 
         // 1. Copy dev config files and dirs
         console.log('  - Copying WPMoo development config files and directories...');
-        const devItemsToCopy = ['.editorconfig', '.prettierrc.json', '.stylelintrc.json', 'phpcs.xml', '.gitattributes', '.githooks', '.github'];
-        for (const item of devItemsToCopy) {
+        
+        const manifestPath = path.join(wpmooVendorDir, 'starter-files.json');
+        let itemsToCopy = [];
+
+        if (fs.existsSync(manifestPath)) {
+            console.log('  - Found starter-files.json manifest. Using it to copy files.');
+            const manifest = await fs.readJson(manifestPath);
+            const files = manifest.files || [];
+            const directories = manifest.directories || [];
+            itemsToCopy = [...files, ...directories];
+        } else {
+            console.log('  - starter-files.json not found. Falling back to hardcoded list.');
+            itemsToCopy = ['.editorconfig', '.prettierrc.json', '.stylelintrc.json', 'phpcs.xml', '.gitattributes', '.githooks', '.github'];
+        }
+
+        for (const item of itemsToCopy) {
             const sourceItem = path.join(wpmooVendorDir, item);
             if (fs.existsSync(sourceItem)) {
                 await fs.copy(sourceItem, path.join(targetDir, item));
+            } else {
+                console.log(chalk.yellow(`    - Warning: Could not find '${item}' to copy.`));
             }
         }
 
@@ -235,7 +250,7 @@ async function run() {
 
         // Post-process the SCSS files that need placeholder replacement
         await copyAndProcessFile(
-            path.join(destResourcesDir, 'scss', 'main.scss'),
+            path.join(sourceResourcesDir, 'scss', 'main.scss'),
             path.join(destResourcesDir, 'scss', 'main.scss'),
             placeholders
         );
@@ -290,6 +305,25 @@ async function copyAndProcessDirectory(sourceDir, destDir, placeholders) {
         }
     }
 }
+
+/**
+ * Searches up the directory tree to find the root of the WPMoo framework.
+ * @param {string} startDir The directory to start searching from.
+ * @returns {Promise<string|null>} The full path to the framework directory, or null if not found.
+ */
+async function findWpmooFrameworkPath(startDir) {
+    let currentDir = startDir;
+    // Ascend until the root directory is reached
+    while (currentDir !== path.parse(currentDir).root) {
+        const potentialPath = path.join(currentDir, 'wpmoo-org', 'wpmoo');
+        if (await fs.pathExists(potentialPath)) {
+            return potentialPath;
+        }
+        currentDir = path.dirname(currentDir);
+    }
+    return null; // Return null if the framework path is not found
+}
+
 
 run().catch((error) => {
     console.error(chalk.red('An error occurred:'), error);
