@@ -157,6 +157,34 @@ async function run() {
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php.tpl'), path.join(targetDir, 'functions.php'), placeholders);
     }
 
+    // Check for local WPMoo framework development directory
+    // Assumes wpmoo-create is running alongside wpmoo-org/wpmoo
+    const localFrameworkPath = path.resolve(process.cwd(), 'wpmoo-org', 'wpmoo');
+    
+    if (await fs.pathExists(localFrameworkPath)) {
+        console.log(chalk.blue('\nDetected local WPMoo framework at ' + localFrameworkPath));
+        console.log('  - Configuring composer to use local framework...');
+        
+        const composerJsonPath = path.join(targetDir, 'composer.json');
+        const composerJson = await fs.readJson(composerJsonPath);
+        
+        composerJson.repositories = composerJson.repositories || [];
+        composerJson.repositories.push({
+            type: "path",
+            url: path.relative(targetDir, localFrameworkPath),
+            options: {
+                symlink: true
+            }
+        });
+        
+        // Use dev-main version for local development
+        if (composerJson.require && composerJson.require['wpmoo/wpmoo']) {
+             composerJson.require['wpmoo/wpmoo'] = 'dev-main';
+        }
+        
+        await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
+    }
+
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
     try {
