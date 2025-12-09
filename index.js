@@ -212,10 +212,6 @@ async function run() {
             placeholders
         );
 
-        // 3. Run initial scope
-        console.log('  - Scoping framework...');
-        execSync('php vendor/bin/moo scope', { cwd: targetDir, stdio: 'inherit' });
-
         console.log(chalk.green('✓ Post-install setup complete.'));
 
     } catch (error) {

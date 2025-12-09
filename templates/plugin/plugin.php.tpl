@@ -24,7 +24,6 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Initialize and boot the WPMoo framework for this plugin.
-// Since the framework is scoped to this plugin's namespace, we can boot it directly without conflicts.
 \WPMoo\WordPress\Bootstrap::instance()->boot( __FILE__, '{{TEXT_DOMAIN}}' );
 
 /**
