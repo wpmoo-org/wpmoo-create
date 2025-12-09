@@ -10,6 +10,7 @@ import { execSync } from 'child_process';
 // Helper functions
 const slugify = (str) => str.toLowerCase().trim().replace(/[^\w\s-]/g, '').replace(/[\s_-]+/g, '-').replace(/^-+|-+$/g, '');
 const pascalCase = (str) => str.replace(/\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase()).replace(/\s/g, '');
+const snakeCase = (str) => slugify(str).replace(/-/g, '_');
 
 async function run() {
     console.log(chalk.blue('>>> Welcome to the WPMoo project creator! <<<'));
@@ -108,16 +109,6 @@ async function run() {
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
     const templateBaseDir = path.join(__dirname, 'templates');
 
-    // --- Calculate relative paths for local development ---
-    const wpmooOrgDir = path.resolve(__dirname, '..');
-    const wpmooDir = path.join(wpmooOrgDir, 'wpmoo');
-    const wpmooCliDir = path.join(wpmooOrgDir, 'wpmoo-cli');
-    const wpmooCodingStandardsDir = path.join(wpmooOrgDir, 'wpmoo-coding-standards');
-
-    const relativePathToWpmoo = path.relative(targetDir, wpmooDir);
-    const relativePathToWpmooCli = path.relative(targetDir, wpmooCliDir);
-    const relativePathToWpmooCodingStandards = path.relative(targetDir, wpmooCodingStandardsDir);
-
     const placeholders = {
         'PROJECT_TYPE': projectType.toLowerCase(),
         'PROJECT_NAME': projectName,
@@ -129,26 +120,41 @@ async function run() {
         'MAIN_FILE_NAME': mainFileName || '',
         'INITIAL_THEME': "amber", // Default to amber
         'PROJECT_SLUG': projectSlug,
-        'PATH_TO_WPMOO': relativePathToWpmoo,
-        'PATH_TO_WPMOO_CLI': relativePathToWpmooCli,
-        'PATH_TO_WPMOO_CODING_STANDARDS': relativePathToWpmooCodingStandards,
+        'PROJECT_FUNCTION_NAME': snakeCase(projectName),
     };
 
     // Copy common templates
     await copyAndProcessFile(path.join(templateBaseDir, 'composer.json'), path.join(targetDir, 'composer.json'), placeholders);
-    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config.yml'), path.join(targetDir, 'wpmoo-config.yml'), placeholders);
+    await copyAndProcessFile(path.join(templateBaseDir, 'package.json'), path.join(targetDir, 'package.json'), placeholders);
+    
+    // Copy wpmoo-config directory
+    await fs.ensureDir(path.join(targetDir, 'wpmoo-config'));
+    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config', 'wpmoo-settings.yml'), path.join(targetDir, 'wpmoo-config', 'wpmoo-settings.yml'), placeholders);
+    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config', 'deploy.yml'), path.join(targetDir, 'wpmoo-config', 'deploy.yml'), placeholders);
+
     await copyAndProcessFile(path.join(templateBaseDir, 'gitignore'), path.join(targetDir, '.gitignore'), placeholders);
     await copyAndProcessFile(path.join(templateBaseDir, 'README.md'), path.join(targetDir, 'README.md'), placeholders);
 
     if (projectType === 'Plugin') {
         // Copy plugin specific templates
-        await fs.ensureDir(path.join(targetDir, 'src'));
-        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php'), path.join(targetDir, mainFileName), placeholders);
-        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'src', 'HelloWorld.php'), path.join(targetDir, 'src', 'HelloWorld.php'), placeholders);
+        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php.tpl'), path.join(targetDir, mainFileName), placeholders);
+        
+        // Recursive copy and process src directory
+        const srcSource = path.join(templateBaseDir, 'plugin', 'src');
+        const srcDest = path.join(targetDir, 'src');
+        await copyAndProcessDirectory(srcSource, srcDest, placeholders);
+        
+        // Copy templates directory if it exists
+        const templatesSource = path.join(templateBaseDir, 'plugin', 'templates');
+        const templatesDest = path.join(targetDir, 'templates');
+        if (await fs.pathExists(templatesSource)) {
+             await copyAndProcessDirectory(templatesSource, templatesDest, placeholders);
+        }
+
     } else if (projectType === 'Theme') {
         // Copy theme specific templates
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), placeholders);
-        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php'), path.join(targetDir, 'functions.php'), placeholders);
+        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php.tpl'), path.join(targetDir, 'functions.php'), placeholders);
     }
 
     // Run composer install
@@ -161,20 +167,24 @@ async function run() {
         process.exit(1);
     }
 
+    // Run npm install
+    console.log(chalk.blue('\nRunning npm install... This may take a moment.'));
+    try {
+        execSync('npm install', { cwd: targetDir, stdio: 'inherit' });
+        console.log(chalk.green('✓ Node dependencies installed.'));
+    } catch (error) {
+        console.error(chalk.red('✗ NPM install failed:'), error.message);
+        // We don't exit here, as the project is still usable, just dev tools might be missing
+    }
+
     // --- Post-install setup ---
     console.log(chalk.blue('\nRunning post-install setup...'));
     try {
         const vendorDir = path.join(targetDir, 'vendor');
-        const wpmooVendorDir = path.join(vendorDir, 'wpmoo', 'wpmoo');
+        const wpmooVendorDir = path.join(vendorDir, 'wpmoo', 'wpmoo'); // Correct path for Packagist install
 
-        // 1. Copy framework
-        console.log('  - Copying framework files...');
-        const sourceFrameworkDir = path.join(wpmooVendorDir, 'framework');
-        const destFrameworkDir = path.join(targetDir, 'framework');
-        await fs.copy(sourceFrameworkDir, destFrameworkDir);
-
-        // 2. Copy dev config files and dirs
-        console.log('  - Copying development config files and directories...');
+        // 1. Copy dev config files and dirs
+        console.log('  - Copying WPMoo development config files and directories...');
         const devItemsToCopy = ['.editorconfig', '.prettierrc.json', '.stylelintrc.json', 'phpcs.xml', '.gitattributes', '.githooks', '.github'];
         for (const item of devItemsToCopy) {
             const sourceItem = path.join(wpmooVendorDir, item);
@@ -183,17 +193,17 @@ async function run() {
             }
         }
 
-        // 3. Create asset structure from templates
+        // 2. Create asset structure from templates (from create-wpmoo templates, not framework)
         console.log('  - Creating minimal asset structure...');
         const sourceResourcesDir = path.join(templateBaseDir, 'resources');
         const destResourcesDir = path.join(targetDir, 'resources');
         await fs.copy(sourceResourcesDir, destResourcesDir);
 
-        console.log('  - Copying SCSS Config files...');
+        console.log('  - Copying SCSS Config files from WPMoo framework...');
         const sourceSassConfigDir = path.join(wpmooVendorDir, 'resources', 'scss', 'config');
         const destSassConfigDir = path.join(targetDir, 'resources', 'scss', 'config');
         await fs.copy(sourceSassConfigDir, destSassConfigDir);
-        await fs.copy(sourceFrameworkDir, destFrameworkDir);
+        // Do not copy framework directory, it stays in vendor
 
         // Post-process the SCSS files that need placeholder replacement
         await copyAndProcessFile(
@@ -202,7 +212,7 @@ async function run() {
             placeholders
         );
 
-        // 4. Run initial scope
+        // 3. Run initial scope
         console.log('  - Scoping framework...');
         execSync('php vendor/bin/moo scope', { cwd: targetDir, stdio: 'inherit' });
 
@@ -233,6 +243,28 @@ async function copyAndProcessFile(sourcePath, destPath, placeholders) {
     }
 
     await fs.writeFile(destPath, content);
+}
+
+// Helper function to recursively copy and process a directory
+async function copyAndProcessDirectory(sourceDir, destDir, placeholders) {
+    await fs.ensureDir(destDir);
+    const items = await fs.readdir(sourceDir);
+
+    for (const item of items) {
+        const sourcePath = path.join(sourceDir, item);
+        let destItemName = item;
+        if (destItemName.endsWith('.tpl')) {
+            destItemName = destItemName.substring(0, destItemName.length - 4);
+        }
+        const destPath = path.join(destDir, destItemName);
+        const stat = await fs.stat(sourcePath);
+
+        if (stat.isDirectory()) {
+            await copyAndProcessDirectory(sourcePath, destPath, placeholders);
+        } else {
+            await copyAndProcessFile(sourcePath, destPath, placeholders);
+        }
+    }
 }
 
 run().catch((error) => {

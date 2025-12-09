@@ -12,26 +12,12 @@
   ],
   "require": {
     "php": ">=7.4",
-    "wpmoo/wpmoo": "*"
+    "wpmoo/wpmoo": "^0.1.0"
   },
   "require-dev": {
     "wpmoo/wpmoo-cli": "dev-dev",
     "wpmoo/wpmoo-coding-standards": "dev-main"
   },
-  "repositories": [
-    {
-      "type": "path",
-      "url": "{{PATH_TO_WPMOO}}"
-    },
-    {
-      "type": "path",
-      "url": "{{PATH_TO_WPMOO_CLI}}"
-    },
-    {
-      "type": "path",
-      "url": "{{PATH_TO_WPMOO_CODING_STANDARDS}}"
-    }
-  ],
   "autoload": {
     "psr-4": {
       "{{NAMESPACE}}\\": "src/"
