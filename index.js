@@ -123,66 +123,91 @@ async function run() {
         'PROJECT_FUNCTION_NAME': snakeCase(projectName),
     };
 
-    // Copy common templates
-    await copyAndProcessFile(path.join(templateBaseDir, 'composer.json'), path.join(targetDir, 'composer.json'), placeholders);
-    await copyAndProcessFile(path.join(templateBaseDir, 'package.json'), path.join(targetDir, 'package.json'), placeholders);
-    
-    // Copy wpmoo-config directory
-    await fs.ensureDir(path.join(targetDir, 'wpmoo-config'));
-    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config', 'wpmoo-settings.yml'), path.join(targetDir, 'wpmoo-config', 'wpmoo-settings.yml'), placeholders);
-    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config', 'deploy.yml'), path.join(targetDir, 'wpmoo-config', 'deploy.yml'), placeholders);
+    const localFrameworkPath = await findWpmooFrameworkPath(process.cwd());
+    if (!localFrameworkPath) {
+        console.error(chalk.red('✗ Could not find local WPMoo framework (wpmoo-org/wpmoo). Aborting.'));
+        process.exit(1);
+    }
 
-    await copyAndProcessFile(path.join(templateBaseDir, 'gitignore'), path.join(targetDir, '.gitignore'), placeholders);
+    // Configure composer to use local framework if found
+    console.log(chalk.blue('\nDetected local WPMoo framework at ' + localFrameworkPath));
+    console.log('  - Configuring composer to use local framework...');
+
+    const composerJsonPath = path.join(targetDir, 'composer.json');
+    const composerJson = await fs.readJson(composerJsonPath);
+
+    composerJson.repositories = composerJson.repositories || [];
+    composerJson.repositories.push({
+        type: "path",
+        url: path.relative(targetDir, localFrameworkPath),
+        options: {
+            symlink: true
+        }
+    });
+
+    // Use dev-main version for local development
+    if (composerJson.require && composerJson.require['wpmoo/wpmoo']) {
+         composerJson.require['wpmoo/wpmoo'] = 'dev-dev';
+    }
+
+    await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
+
+
+    console.log(chalk.blue('\nCopying base files from WPMoo framework...'));
+
+    const wpmooFrameworkBaseDir = localFrameworkPath;
+
+    // Define files/directories to copy from the WPMoo framework
+    const filesToCopyFromFramework = [
+        '.editorconfig',
+        'composer.json',
+        'LICENSE',
+        'package.json',
+        'phpcs.xml',
+        'phpstan.neon.dist',
+        'phpunit.xml.dist',
+        'readme.txt',
+        'starter-files.json',
+        'CODE_OF_CONDUCT.md',
+        'resources', // Copy entire resources directory
+        'languages', // Copy entire languages directory
+        'wpmoo-config', // Copy entire wpmoo-config directory
+    ];
+
+    // Copy selected files/directories from WPMoo framework
+    for (const item of filesToCopyFromFramework) {
+        const sourcePath = path.join(wpmooFrameworkBaseDir, item);
+        const destPath = path.join(targetDir, item);
+        if (await fs.pathExists(sourcePath)) {
+            // If it's a directory, recursively copy and process. Otherwise, just copy the file.
+            const stats = await fs.stat(sourcePath);
+            if (stats.isDirectory()) {
+                await copyAndProcessDirectory(sourcePath, destPath, placeholders);
+            } else {
+                await copyAndProcessFile(sourcePath, destPath, placeholders);
+            }
+        } else {
+            console.log(chalk.yellow(`    - Warning: '${item}' not found in WPMoo framework, skipping.`));
+        }
+    }
+
+    // Copy README.md from wpmoo-create templates (contains specific instructions for new projects)
     await copyAndProcessFile(path.join(templateBaseDir, 'README.md'), path.join(targetDir, 'README.md'), placeholders);
 
+    // Copy main plugin file from wpmoo-create template
     if (projectType === 'Plugin') {
-        // Copy plugin specific templates
         await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php.tpl'), path.join(targetDir, mainFileName), placeholders);
-        
-        // Recursive copy and process src directory
-        const srcSource = path.join(templateBaseDir, 'plugin', 'src');
-        const srcDest = path.join(targetDir, 'src');
-        await copyAndProcessDirectory(srcSource, srcDest, placeholders);
-        
-        // Copy templates directory if it exists
-        const templatesSource = path.join(templateBaseDir, 'plugin', 'templates');
-        const templatesDest = path.join(targetDir, 'templates');
-        if (await fs.pathExists(templatesSource)) {
-             await copyAndProcessDirectory(templatesSource, templatesDest, placeholders);
-        }
-
     } else if (projectType === 'Theme') {
-        // Copy theme specific templates
+        // TODO: Implement theme specific templates from wpmoo-create
+        console.log(chalk.yellow('  - Theme creation is not fully implemented yet. Minimal theme structure copied.'));
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), placeholders);
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php.tpl'), path.join(targetDir, 'functions.php'), placeholders);
     }
 
-    // Check for local WPMoo framework development directory
-    const localFrameworkPath = await findWpmooFrameworkPath(process.cwd());
-    
-    if (localFrameworkPath) {
-        console.log(chalk.blue('\nDetected local WPMoo framework at ' + localFrameworkPath));
-        console.log('  - Configuring composer to use local framework...');
-        
-        const composerJsonPath = path.join(targetDir, 'composer.json');
-        const composerJson = await fs.readJson(composerJsonPath);
-        
-        composerJson.repositories = composerJson.repositories || [];
-        composerJson.repositories.push({
-            type: "path",
-            url: path.relative(targetDir, localFrameworkPath),
-            options: {
-                symlink: true
-            }
-        });
-        
-        // Use dev-main version for local development
-        if (composerJson.require && composerJson.require['wpmoo/wpmoo']) {
-             composerJson.require['wpmoo/wpmoo'] = 'dev-dev';
-        }
-        
-        await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
-    }
+    // Generate minimal src directory from wpmoo-create templates
+    const srcSource = path.join(templateBaseDir, 'plugin', 'src');
+    const srcDest = path.join(targetDir, 'src');
+    await copyAndProcessDirectory(srcSource, srcDest, placeholders);
 
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
@@ -262,6 +287,34 @@ async function run() {
         process.exit(1);
     }
 
+
+    // --- Run WPMoo CLI rename command ---
+    console.log(chalk.blue('\nRunning WPMoo CLI rename command...'));
+    try {
+        const wpmooCliPath = path.resolve(__dirname, '../../wpmoo-cli/bin/moo'); // Path to moo executable from create-wpmoo context
+        const relativeWpmooCliPath = path.relative(targetDir, wpmooCliPath); // Path relative to the new project
+        const renameCommand = `php ${relativeWpmooCliPath} rename`;
+
+        // Construct the input string for the interactive rename command
+        // Plugin name, Namespace, Text Domain, and final 'yes' confirmation
+        const interactiveInput = [
+            answers.projectName,
+            answers.projectNamespace,
+            answers.textDomain,
+            'yes'
+        ].join('\n');
+
+        execSync(renameCommand, {
+            cwd: targetDir,
+            input: interactiveInput,
+            stdio: 'inherit' // Inherit stdio to show prompts and output, or 'pipe' to capture
+        });
+        console.log(chalk.green('✓ Plugin renamed and configured using WPMoo CLI.'));
+
+    } catch (error) {
+        console.error(chalk.red('✗ WPMoo CLI rename command failed:'), error.message);
+        // Do not exit here, allow project to be created, but inform of failure
+    }
 
     console.log(chalk.bold.green('\nProject setup complete!'));
     console.log(chalk.bold.blue('Next steps:'));
