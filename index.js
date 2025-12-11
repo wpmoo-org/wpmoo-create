@@ -115,7 +115,8 @@ async function run() {
         'PROJECT_DESCRIPTION': projectDescription,
         'AUTHOR_NAME': authorName,
         'AUTHOR_EMAIL': authorEmail,
-        'NAMESPACE': projectNamespace,
+        'NAMESPACE': projectNamespace, // Keep this for other PHP templates
+        'NAMESPACE_VALUE_WITH_SLASH': projectNamespace + '\\', // New placeholder for composer.json
         'TEXT_DOMAIN': textDomain,
         'MAIN_FILE_NAME': mainFileName || '',
         'INITIAL_THEME': "amber", // Default to amber
@@ -152,7 +153,6 @@ async function run() {
     const combinedItemsToCopy = [
         ...starterFiles.files,
         ...starterFiles.directories,
-        'composer.json',
         'LICENSE',
         'package.json',
         'readme.txt',
@@ -194,6 +194,9 @@ async function run() {
         }
     }
 
+    // Copy composer.json from wpmoo-create templates
+    await copyAndProcessFile(path.join(templateBaseDir, 'composer.json'), path.join(targetDir, 'composer.json'), placeholders);
+
     // Copy README.md from wpmoo-create templates (contains specific instructions for new projects)
     await copyAndProcessFile(path.join(templateBaseDir, 'README.md'), path.join(targetDir, 'README.md'), placeholders);
 
@@ -206,7 +209,6 @@ async function run() {
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), placeholders);
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php.tpl'), path.join(targetDir, 'functions.php'), placeholders);
     }
-
     // Generate minimal src directory from wpmoo-create templates
     const srcSource = path.join(templateBaseDir, 'plugin', 'src');
     const srcDest = path.join(targetDir, 'src');
@@ -234,16 +236,6 @@ async function run() {
     }
 
     await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
-
-    // Clean up composer.json (remove scripts, filter dev dependencies)
-    await cleanupComposerJson(composerJsonPath, {
-        writeln: (msg) => console.log(msg),
-        error: (msg) => console.error(msg),
-        warning: (msg) => console.warn(msg),
-        note: (msg) => console.log(msg),
-        log: (msg) => console.log(msg),
-        // Add other SymfonyStyle-like methods if used in cleanupComposerJson
-    });
 
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
@@ -366,7 +358,9 @@ async function copyAndProcessFile(sourcePath, destPath, placeholders) {
     let content = await fs.readFile(sourcePath, 'utf8');
 
     for (const [key, value] of Object.entries(placeholders)) {
-        const regex = new RegExp(`{{${key}}}`, 'g');
+        // New placeholder convention: use the uppercase KEY itself, matched with word boundaries.
+        // Example: PROJECT_TYPE, PROJECT_NAME
+        const regex = new RegExp(`\\b${key}\\b`, 'g'); // Use word boundaries to match exact key
         content = content.replace(regex, value);
     }
 
@@ -413,44 +407,6 @@ async function findWpmooFrameworkPath(startDir) {
     return null; // Return null if the framework path is not found
 }
 
-
-/**
- * Cleans up the composer.json file by removing unnecessary scripts and filtering dev dependencies.
- *
- * @param {string} composerJsonPath The path to the composer.json file.
- * @param {SymfonyStyle} io The SymfonyStyle instance for output.
- */
-async function cleanupComposerJson(composerJsonPath, io) {
-    io.writeln(chalk.blue('\nCleaning up composer.json...'));
-    try {
-        const composerJson = await fs.readJson(composerJsonPath);
-
-        // Remove all scripts
-        if (composerJson.scripts) {
-            delete composerJson.scripts;
-            io.writeln(chalk.gray('  - Removed scripts block.'));
-        }
-
-        // Filter require-dev dependencies
-        if (composerJson['require-dev']) {
-            const allowedDevDependencies = ['wpmoo/wpmoo-cli', 'scssphp/scssphp'];
-            const filteredRequireDev = {};
-            for (const [pkg, version] of Object.entries(composerJson['require-dev'])) {
-                if (allowedDevDependencies.includes(pkg)) {
-                    filteredRequireDev[pkg] = version;
-                }
-            }
-            composerJson['require-dev'] = filteredRequireDev;
-            io.writeln(chalk.gray('  - Filtered require-dev dependencies.'));
-        }
-
-        await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
-        io.writeln(chalk.green('✓ composer.json cleaned up successfully.'));
-    } catch (error) {
-        io.error(chalk.red(`✗ Failed to clean up composer.json: ${error.message}`));
-        throw error; // Re-throw to indicate a critical failure
-    }
-}
 
 run().catch((error) => {
     console.error(chalk.red('An error occurred:'), error);

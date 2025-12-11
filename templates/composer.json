@@ -1,35 +1,39 @@
 {
-  "name": "wpmoo-plugins/{{TEXT_DOMAIN}}",
-  "description": "{{PROJECT_DESCRIPTION}}",
+  "name": "wpmoo/PROJECT_SLUG",
+  "description": "PROJECT_DESCRIPTION",
   "license": "GPL-2.0-or-later",
-  "minimum-stability": "dev",
-  "prefer-stable": true,
+  "homepage": "https://your-plugin-homepage.com",
   "authors": [
     {
-      "name": "{{AUTHOR_NAME}}",
-      "email": "{{AUTHOR_EMAIL}}"
+      "name": "AUTHOR_NAME",
+      "email": "AUTHOR_EMAIL"
     }
   ],
+  "keywords": [
+    "wordpress",
+    "PROJECT_TYPE"
+  ],
+  "support": {
+    "issues": "https://github.com/your-org/PROJECT_SLUG/issues",
+    "source": "https://github.com/your-org/PROJECT_SLUG"
+  },
+  "type": "wordpress-PROJECT_TYPE",
   "require": {
     "php": ">=7.4",
     "wpmoo/wpmoo": "dev-dev"
+  },
+  "autoload": {
+    "psr-4": {
+      "NAMESPACE_VALUE_WITH_SLASH": "src/"
+    }
   },
   "require-dev": {
     "wpmoo/wpmoo-cli": "dev-dev",
     "wpmoo/wpmoo-coding-standards": "dev-main"
   },
-  "autoload": {
-    "psr-4": {
-      "{{NAMESPACE}}\\": "src/"
+  "config": {
+    "allow-plugins": {
+      "dealerdirect/phpcodesniffer-composer-installer": true
     }
-  },
-  "scripts": {
-    "setup-wrapper": "php vendor/wpmoo/wpmoo-cli/scripts/generate-moo-wrapper.php",
-    "post-install-cmd": [
-      "@setup-wrapper"
-    ],
-    "post-update-cmd": [
-      "@setup-wrapper"
-    ]
   }
 }
