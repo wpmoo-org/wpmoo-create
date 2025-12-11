@@ -2,8 +2,25 @@
 /**
  * Theme functions and definitions.
  *
- * @package {{NAMESPACE}}
+ * @package __NAMESPACE__
  */
+
+namespace __NAMESPACE__;
+
+use WPMoo\Core\App;
+
+/**
+ * Loads the WPMoo framework for theme.
+ */
+class MainTheme {
+
+	// ...
+}
+
+// Bootstrap the theme
+add_action( 'after_setup_theme', function() {
+	MainTheme::instance()->run();
+} );
 
 // If this file is called directly, abort.
 if ( ! defined( 'ABSPATH' ) ) {

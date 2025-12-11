@@ -2,10 +2,10 @@
 /**
  * Admin Settings Page.
  *
- * @package {{NAMESPACE}}\Admin
+ * @package __NAMESPACE__\Admin
  */
 
-namespace {{NAMESPACE}}\Admin;
+namespace __NAMESPACE__\Admin;
 
 use WPMoo\Moo;
 
@@ -23,25 +23,24 @@ class AdminSettings {
 
 	/**
 	 * Register the admin page.
-	 */
-	public function register_page() {
+	 */	public function register_page() {
 		// Create the main admin page.
-		Moo::page( '{{TEXT_DOMAIN}}-settings', '{{PROJECT_NAME}}' )
+		Moo::page( '__TEXT_DOMAIN__-settings', '__PROJECT_NAME__' )
 			->menu_icon( 'dashicons-admin-generic' );
 
 		// Create a default tab with a welcome message
-		Moo::tabs( '{{TEXT_DOMAIN}}_main_tabs' )
-			->parent( '{{TEXT_DOMAIN}}-settings' )
+		Moo::tabs( '__TEXT_DOMAIN___main_tabs' )
+			->parent( '__TEXT_DOMAIN__-settings' )
 			->items(
 				array(
 					array(
 						'id'      => 'general',
-						'title'   => __( 'General', '{{TEXT_DOMAIN}}' ),
+						'title'   => __( 'General', '__TEXT_DOMAIN__' ),
 						'content' => array(
 							Moo::field( 'message', 'welcome_message' )
-								->label( __( 'Welcome', '{{TEXT_DOMAIN}}' ) )
-								->default( 'Welcome to {{PROJECT_NAME}} Settings' )
-								->description( __( 'This is a sample settings page created with WPMoo.', '{{TEXT_DOMAIN}}' ) ),
+								->label( __( 'Welcome', '__TEXT_DOMAIN__' ) )
+								->default( 'Welcome to __PROJECT_NAME__ Settings' )
+								->description( __( 'This is a sample settings page created with WPMoo.', '__TEXT_DOMAIN__' ) ),
 						),
 					),
 				)

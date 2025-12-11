@@ -1,13 +1,13 @@
 <?php
 /**
- * Plugin Name: {{PROJECT_NAME}}
- * Description: {{PROJECT_DESCRIPTION}}
+ * Plugin Name: __PROJECT_NAME__
+ * Description: __PROJECT_DESCRIPTION__
  * Version: 0.1.0
- * Author: {{AUTHOR_NAME}}
- * Text Domain: {{TEXT_DOMAIN}}
+ * Author: __AUTHOR_NAME__
+ * Text Domain: __TEXT_DOMAIN__
  * License: GPL-2.0-or-later
  *
- * @package {{NAMESPACE}}
+ * @package __NAMESPACE__
  */
 
 // If this file is called directly, abort.
@@ -24,25 +24,25 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Initialize and boot the WPMoo framework for this plugin.
-\WPMoo\WordPress\Bootstrap::instance()->boot( __FILE__, '{{TEXT_DOMAIN}}' );
+\WPMoo\WordPress\Bootstrap::instance()->boot( __FILE__, '__TEXT_DOMAIN__' );
 
 /**
  * The code that runs during plugin activation.
  */
-function activate_{{PROJECT_FUNCTION_NAME}}() {
-	\{{NAMESPACE}}\Setup\Activator::activate();
+function __ACTIVATE_FUNCTION_NAME__() {
+	\__NAMESPACE__\Setup\Activator::activate();
 }
 
 /**
  * The code that runs during plugin deactivation.
  */
-function deactivate_{{PROJECT_FUNCTION_NAME}}() {
-	\{{NAMESPACE}}\Setup\Deactivator::deactivate();
+function __DEACTIVATE_FUNCTION_NAME__() {
+	\__NAMESPACE__\Setup\Deactivator::deactivate();
 }
 
-register_activation_hook( __FILE__, 'activate_{{PROJECT_FUNCTION_NAME}}' );
-register_deactivation_hook( __FILE__, 'deactivate_{{PROJECT_FUNCTION_NAME}}' );
+register_activation_hook( __FILE__, '__ACTIVATE_FUNCTION_NAME__' );
+register_deactivation_hook( __FILE__, '__DEACTIVATE_FUNCTION_NAME__' );
 
 // Start the plugin logic
-$plugin = new \{{NAMESPACE}}\Plugin();
+$plugin = new \__NAMESPACE__\Plugin();
 $plugin->run();

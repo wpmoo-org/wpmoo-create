@@ -103,34 +103,95 @@ async function run() {
 
     console.log(chalk.green(`\nCreating ${projectType.toLowerCase()} project in ${chalk.bold(targetDir)}...`));
 
-    // Create project directory
-    await fs.ensureDir(targetDir);
+        // Create project directory
 
-    const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    // Locate the starter templates within the WPMoo framework
-    const wpmooFrameworkPath = await findWpmooFrameworkPath(process.cwd());
-    if (!wpmooFrameworkPath) {
-        console.error(chalk.red('✗ Could not find local WPMoo framework (wpmoo-org/wpmoo). Aborting template setup.'));
-        process.exit(1);
-    }
-    const templateBaseDir = path.join(wpmooFrameworkPath, 'starter-templates');
-    console.log(chalk.blue(`  - Using templates from: ${templateBaseDir}`));
+        await fs.ensureDir(targetDir);
 
-    const placeholders = {        'PROJECT_TYPE': projectType.toLowerCase(),
-        'PROJECT_NAME': projectName,
-        'PROJECT_DESCRIPTION': projectDescription,
-        'PROJECT_AUTHOR_NAME': authorName,
-        'PROJECT_AUTHOR_EMAIL': authorEmail,
-        'PROJECT_NAMESPACE': projectNamespace, // For PHP templates
-        'PROJECT_NAMESPACE_WITH_SLASH': JSON.stringify(projectNamespace + '\\').slice(1, -1), // For composer.json
-        'PROJECT_TEXT_DOMAIN': textDomain,
-        'PROJECT_MAIN_FILE_NAME': mainFileName || '',
-        'INITIAL_THEME': "amber", // Default to amber
-        'PROJECT_SLUG': projectSlug,
-        'PROJECT_FUNCTION_NAME': snakeCase(projectName),
-        'PROJECT_ACTIVATE_FUNCTION_NAME': `activate_${snakeCase(projectName)}`,
-        'PROJECT_DEACTIVATE_FUNCTION_NAME': `deactivate_${snakeCase(projectName)}`,
-    };
+    
+
+        const __dirname = path.dirname(fileURLToPath(import.meta.url));
+
+        const templateBaseDir = path.join(__dirname, 'templates');
+
+    
+
+                            const placeholders = {
+
+    
+
+                                'PROJECT_TYPE': projectType.toLowerCase(),
+
+    
+
+                                'PROJECT_NAME': projectName,
+
+    
+
+                                'PROJECT_DESCRIPTION': projectDescription,
+
+    
+
+                                'AUTHOR_NAME': authorName,
+
+    
+
+                                'AUTHOR_EMAIL': authorEmail,
+
+    
+
+                                'NAMESPACE': projectNamespace, // For PHP templates
+
+    
+
+                                'NAMESPACE_FOR_COMPOSER': JSON.stringify(projectNamespace + '\\').slice(1, -1), // For composer.json
+
+    
+
+                                'TEXT_DOMAIN': textDomain,
+
+    
+
+                                'MAIN_FILE_NAME': mainFileName || '',
+
+    
+
+                                'INITIAL_THEME': "amber", // Default to amber
+
+    
+
+                                'PROJECT_SLUG': projectSlug,
+
+    
+
+                                'PROJECT_FUNCTION_NAME': snakeCase(projectName),
+
+    
+
+                                'PROJECT_SLUG_HELLO_SHORTCODE': `${projectSlug}_hello`,
+
+    
+
+                                'PROJECT_SLUG_SCREEN_ID': projectSlug,
+
+    
+
+                                'PROJECT_FUNCTION_NAME_RUN': `${snakeCase(projectName)}_run`,
+
+    
+
+                                'ACTIVATE_FUNCTION_NAME': `activate_${snakeCase(projectName)}`,
+
+    
+
+                                'DEACTIVATE_FUNCTION_NAME': `deactivate_${snakeCase(projectName)}`,
+
+    
+
+                                'PROJECT_GITHUB_ORG': 'wpmoo-org', // Default GitHub organization
+
+    
+
+                            };
 
         const localFrameworkPath = await findWpmooFrameworkPath(process.cwd());
 
@@ -146,84 +207,39 @@ async function run() {
 
         console.log(chalk.blue('\nCopying base files from WPMoo framework...'));
 
-    const wpmooFrameworkBaseDir = localFrameworkPath;
-    const starterFilesManifestPath = path.join(wpmooFrameworkBaseDir, 'starter-files.json');
-
-    let starterFiles = { files: [], directories: [] };
-    if (await fs.pathExists(starterFilesManifestPath)) {
-        starterFiles = await fs.readJson(starterFilesManifestPath);
-        console.log(chalk.blue('  - Using starter-files.json from WPMoo framework for initial copy.'));
-    } else {
-        console.log(chalk.yellow('  - Warning: starter-files.json not found in WPMoo framework. Using default essential files.'));
-    }
-
-    // Combine starter files with other essential project files/directories
-    const combinedItemsToCopy = [
-        ...starterFiles.files,
-        ...starterFiles.directories,
-        'LICENSE',
-        'package.json',
-        'readme.txt',
-        'CODE_OF_CONDUCT.md',
-        'resources', // Copy entire resources directory
-        'languages', // Copy entire languages directory
-        'wpmoo-config', // Copy entire wpmoo-config directory
-    ];
-
-    // Remove duplicates
-    const uniqueItemsToCopy = [...new Set(combinedItemsToCopy)];
-
-    // Copy selected files/directories from WPMoo framework
-    for (const item of uniqueItemsToCopy) {
-        const sourcePath = path.join(wpmooFrameworkBaseDir, item);
-        const destPath = path.join(targetDir, item);
-        if (await fs.pathExists(sourcePath)) {
-            const stats = await fs.stat(sourcePath);
-            if (stats.isDirectory()) {
-                await fs.ensureDir(destPath); // Ensure directory exists before copying contents
-                // Recursively copy and process, but exclude .gitkeep files from empty directories
-                const itemsInDir = await fs.readdir(sourcePath);
-                for (const subItem of itemsInDir) {
-                    if (subItem === '.gitkeep') continue;
-                    const subSourcePath = path.join(sourcePath, subItem);
-                    const subDestPath = path.join(destPath, subItem);
-                    const subStats = await fs.stat(subSourcePath);
-                    if (subStats.isDirectory()) {
-                        await copyAndProcessDirectory(subSourcePath, subDestPath, placeholders);
-                    } else {
-                        await copyAndProcessFile(subSourcePath, subDestPath, placeholders);
-                    }
-                }
-            } else {
-                await copyAndProcessFile(sourcePath, destPath, placeholders);
-            }
-        } else {
-            console.log(chalk.yellow(`    - Warning: '${item}' not found in WPMoo framework, skipping.`));
-        }
-    }
-
-    // Copy composer.json from wpmoo-create templates
+    // Copy common templates
     await copyAndProcessFile(path.join(templateBaseDir, 'composer.json'), path.join(targetDir, 'composer.json'), placeholders);
+    await copyAndProcessFile(path.join(templateBaseDir, 'package.json'), path.join(targetDir, 'package.json'), placeholders);
+    
+    // Copy wpmoo-config directory
+    await fs.ensureDir(path.join(targetDir, 'wpmoo-config'));
+    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config', 'wpmoo-settings.yml'), path.join(targetDir, 'wpmoo-config', 'wpmoo-settings.yml'), placeholders);
+    await copyAndProcessFile(path.join(templateBaseDir, 'wpmoo-config', 'deploy.yml'), path.join(targetDir, 'wpmoo-config', 'deploy.yml'), placeholders);
 
-    // Copy README.md from wpmoo-create templates (contains specific instructions for new projects)
+    await copyAndProcessFile(path.join(templateBaseDir, 'gitignore'), path.join(targetDir, '.gitignore'), placeholders);
     await copyAndProcessFile(path.join(templateBaseDir, 'README.md'), path.join(targetDir, 'README.md'), placeholders);
 
-    // Copy main plugin file from wpmoo-create template
     if (projectType === 'Plugin') {
-        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php'), path.join(targetDir, mainFileName), placeholders);
+        // Copy plugin specific templates
+        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php.tpl'), path.join(targetDir, mainFileName), placeholders);
+        
+        // Recursive copy and process src directory
+        const srcSource = path.join(templateBaseDir, 'plugin', 'src');
+        const srcDest = path.join(targetDir, 'src');
+        await copyAndProcessDirectory(srcSource, srcDest, placeholders);
+        
+        // Copy templates directory if it exists
+        const templatesSource = path.join(templateBaseDir, 'plugin', 'templates');
+        const templatesDest = path.join(targetDir, 'templates');
+        if (await fs.pathExists(templatesSource)) {
+             await copyAndProcessDirectory(templatesSource, templatesDest, placeholders);
+        }
+
     } else if (projectType === 'Theme') {
-        // TODO: Implement theme specific templates from wpmoo-create
-        console.log(chalk.yellow('  - Theme creation is not fully implemented yet. Minimal theme structure copied.'));
+        // Copy theme specific templates
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), placeholders);
-        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php'), path.join(targetDir, 'functions.php'), placeholders);
+        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php.tpl'), path.join(targetDir, 'functions.php'), placeholders);
     }
-    // Generate minimal src directory from wpmoo-create templates
-    const srcSource = path.join(templateBaseDir, 'plugin', 'src');
-    const srcDest = path.join(targetDir, 'src');
-    await copyAndProcessDirectory(srcSource, srcDest, placeholders);
-
-
-
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
     try {
@@ -317,9 +333,8 @@ async function copyAndProcessFile(sourcePath, destPath, placeholders) {
     let content = await fs.readFile(sourcePath, 'utf8');
 
     for (const [key, value] of Object.entries(placeholders)) {
-        // New placeholder convention: use the uppercase KEY itself, matched with word boundaries.
-        // Example: PROJECT_TYPE, PROJECT_NAME
-        const regex = new RegExp(`\\b${key}\\b`, 'g'); // Use word boundaries to match exact key
+        // New placeholder convention: __KEY__
+        const regex = new RegExp(`__${key}__`, 'g');
         content = content.replace(regex, value);
     }
 
@@ -333,7 +348,11 @@ async function copyAndProcessDirectory(sourceDir, destDir, placeholders) {
 
     for (const item of items) {
         const sourcePath = path.join(sourceDir, item);
-        const destPath = path.join(destDir, item); // No .tpl removal needed
+        let destItemName = item;
+        if (destItemName.endsWith('.tpl')) {
+            destItemName = destItemName.substring(0, destItemName.length - 4);
+        }
+        const destPath = path.join(destDir, destItemName);
         const stat = await fs.stat(sourcePath);
 
         if (stat.isDirectory()) {
