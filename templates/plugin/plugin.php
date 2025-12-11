@@ -22,15 +22,12 @@ use \PROJECT_NAMESPACE\Plugin;
 
 
 /**
- * Load the WPMoo framework bootstrap.
- *
- * This file is responsible for setting up constants, autoloading,
- * and initializing the framework.
+ * Load the WPMoo framework.
  */
 require_once __DIR__ . '/vendor/autoload.php';
 
-// Initialize and boot the WPMoo framework for this plugin.
-Bootstrap::instance()->boot( __FILE__, 'PROJECT_TEXT_DOMAIN' );
+// Initialize the WPMoo framework for this plugin (register with framework manager).
+Bootstrap::initialize( __FILE__, 'PROJECT_TEXT_DOMAIN', '0.1.0' );
 
 /**
  * The code that runs during plugin activation.
@@ -50,5 +47,5 @@ register_activation_hook( __FILE__, 'PROJECT_ACTIVATE_FUNCTION_NAME' );
 register_deactivation_hook( __FILE__, 'PROJECT_DEACTIVATE_FUNCTION_NAME' );
 
 // Start the plugin logic
-$plugin = new Plugin();
+$plugin = Plugin::instance();
 $plugin->run();

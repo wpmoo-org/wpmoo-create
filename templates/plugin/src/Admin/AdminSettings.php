@@ -8,6 +8,7 @@
 namespace PROJECT_NAMESPACE\Admin;
 
 use WPMoo\Moo;
+use WPMoo\Field\Field;
 
 /**
  * Handles the admin settings page using WPMoo.
@@ -26,7 +27,7 @@ class AdminSettings {
 	 */	public function register_page() {
 		
 		// Create the main admin page.
-		Moo::page( 'PROJECT_FUNCTION_PREFIX-settings', __( 'WPMoo Settings', 'PROJECT_TEXT_DOMAIN' ) )
+		Moo::page( 'PROJECT_FUNCTION_PREFIX-settings', __( 'PROJECT_NAME', 'PROJECT_TEXT_DOMAIN' ) )
 		->capability( 'manage_options' )
 		->description( __( 'Configure WPMoo Framework settings', 'PROJECT_TEXT_DOMAIN' ) )
 		->menu_slug( 'PROJECT_TEXT_DOMAIN' )
