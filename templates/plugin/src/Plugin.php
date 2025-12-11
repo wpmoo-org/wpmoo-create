@@ -36,10 +36,10 @@ class Plugin extends App
     protected function loadHooks()
     {
         // Example: Add a shortcode
-        add_shortcode('PROJECT_SLUG_HELLO_SHORTCODE', [$this, 'helloWorldShortcode']);
+        add_shortcode('PROJECT_SLUG_hello_shortcode', [$this, 'PROJECT_FUNCTION_NAME_hello_world_shortcode']);
 
         // Example: Admin notice for samples
-        add_action('admin_notices', [$this, 'samplesAdminNotice']);
+        add_action('admin_notices', [$this, 'PROJECT_FUNCTION_NAME_admin_notice']);
     }
 
     /**
@@ -47,7 +47,7 @@ class Plugin extends App
      *
      * @return string
      */
-    public function helloWorldShortcode(): string
+    public function PROJECT_FUNCTION_NAME_hello_world_shortcode(): string
     {
         return 'Hello from PROJECT_NAME!';
     }
@@ -55,12 +55,12 @@ class Plugin extends App
     /**
      * Displays an admin notice regarding samples.
      */
-    public function samplesAdminNotice()
+    public function PROJECT_FUNCTION_NAME_admin_notice()
     {
         // In a real scenario, this would check a setting to see if samples are active.
         // For now, it's just a placeholder notice.
         $screen = get_current_screen();
-        if (strpos($screen->id, 'PROJECT_SLUG_SCREEN_ID') !== false) { // Check if we are on our plugin's admin page
+        if (strpos($screen->id, 'PROJECT_SLUG_screen_id') !== false) { // Check if we are on our plugin's admin page
             $view = new View();
             echo $view->render('@WPMoo-samples/samples-notice', [
                 'plugin_name' => 'PROJECT_NAME',
@@ -72,7 +72,7 @@ class Plugin extends App
 }
 
 // Bootstrap the plugin
-function PROJECT_FUNCTION_NAME_RUN() {
+function PROJECT_FUNCTION_NAME_run() {
     return Plugin::instance();
 }
-add_action('plugins_loaded', 'PROJECT_FUNCTION_NAME_RUN');
+add_action('plugins_loaded', 'PROJECT_FUNCTION_NAME_run');
