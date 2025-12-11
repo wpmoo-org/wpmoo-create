@@ -9,10 +9,10 @@ use WPMoo\Core\View;
  * Plugin Name: PROJECT_NAME
  * Description: PROJECT_DESCRIPTION
  * Version: 1.0.0
- * Author: AUTHOR_NAME
- * Author URI: AUTHOR_EMAIL
+ * Author: PROJECT_AUTHOR_NAME
+ * Author URI: PROJECT_AUTHOR_EMAIL
  * License: GPL-2.0-or-later
- * Text Domain: TEXT_DOMAIN
+ * Text Domain: PROJECT_TEXT_DOMAIN
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
