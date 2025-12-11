@@ -295,33 +295,6 @@ async function run() {
     }
 
 
-    // --- Run WPMoo CLI rename command ---
-    console.log(chalk.blue('\nRunning WPMoo CLI rename command...'));
-    try {
-        const wpmooCliPath = path.resolve(__dirname, '../wpmoo-cli/bin/moo'); // Absolute path to moo executable
-        const renameCommand = `php ${wpmooCliPath} rename`;
-
-        // Construct the input string for the interactive rename command
-        // Plugin name, Namespace, Text Domain, and final 'yes' confirmation
-        const interactiveInput = [
-            answers.projectName,
-            answers.projectNamespace,
-            answers.textDomain,
-            'yes'
-        ].join('\n');
-
-        execSync(renameCommand, {
-            cwd: targetDir,
-            input: interactiveInput,
-            stdio: 'inherit' // Inherit stdio to show prompts and output, or 'pipe' to capture
-        });
-        console.log(chalk.green('✓ Plugin renamed and configured using WPMoo CLI.'));
-
-    } catch (error) {
-        console.error(chalk.red('✗ WPMoo CLI rename command failed:'), error.message);
-        // Do not exit here, allow project to be created, but inform of failure
-    }
-
     console.log(chalk.bold.green('\nProject setup complete!'));
     console.log(chalk.bold.blue('Next steps:'));
     console.log(`  cd ${projectSlug}`);
