@@ -123,66 +123,69 @@ async function run() {
         'PROJECT_FUNCTION_NAME': snakeCase(projectName),
     };
 
-    const localFrameworkPath = await findWpmooFrameworkPath(process.cwd());
-    if (!localFrameworkPath) {
-        console.error(chalk.red('✗ Could not find local WPMoo framework (wpmoo-org/wpmoo). Aborting.'));
-        process.exit(1);
-    }
+        const localFrameworkPath = await findWpmooFrameworkPath(process.cwd());
 
-    // Configure composer to use local framework if found
-    console.log(chalk.blue('\nDetected local WPMoo framework at ' + localFrameworkPath));
-    console.log('  - Configuring composer to use local framework...');
+        if (!localFrameworkPath) {
 
-    const composerJsonPath = path.join(targetDir, 'composer.json');
-    const composerJson = await fs.readJson(composerJsonPath);
+            console.error(chalk.red('✗ Could not find local WPMoo framework (wpmoo-org/wpmoo). Aborting.'));
 
-    composerJson.repositories = composerJson.repositories || [];
-    composerJson.repositories.push({
-        type: "path",
-        url: path.relative(targetDir, localFrameworkPath),
-        options: {
-            symlink: true
+            process.exit(1);
+
         }
-    });
 
-    // Use dev-main version for local development
-    if (composerJson.require && composerJson.require['wpmoo/wpmoo']) {
-         composerJson.require['wpmoo/wpmoo'] = 'dev-dev';
-    }
+    
 
-    await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
-
-
-    console.log(chalk.blue('\nCopying base files from WPMoo framework...'));
+        console.log(chalk.blue('\nCopying base files from WPMoo framework...'));
 
     const wpmooFrameworkBaseDir = localFrameworkPath;
+    const starterFilesManifestPath = path.join(wpmooFrameworkBaseDir, 'starter-files.json');
 
-    // Define files/directories to copy from the WPMoo framework
-    const filesToCopyFromFramework = [
-        '.editorconfig',
+    let starterFiles = { files: [], directories: [] };
+    if (await fs.pathExists(starterFilesManifestPath)) {
+        starterFiles = await fs.readJson(starterFilesManifestPath);
+        console.log(chalk.blue('  - Using starter-files.json from WPMoo framework for initial copy.'));
+    } else {
+        console.log(chalk.yellow('  - Warning: starter-files.json not found in WPMoo framework. Using default essential files.'));
+    }
+
+    // Combine starter files with other essential project files/directories
+    const combinedItemsToCopy = [
+        ...starterFiles.files,
+        ...starterFiles.directories,
         'composer.json',
         'LICENSE',
         'package.json',
-        'phpcs.xml',
-        'phpstan.neon.dist',
-        'phpunit.xml.dist',
         'readme.txt',
-        'starter-files.json',
         'CODE_OF_CONDUCT.md',
         'resources', // Copy entire resources directory
         'languages', // Copy entire languages directory
         'wpmoo-config', // Copy entire wpmoo-config directory
     ];
 
+    // Remove duplicates
+    const uniqueItemsToCopy = [...new Set(combinedItemsToCopy)];
+
     // Copy selected files/directories from WPMoo framework
-    for (const item of filesToCopyFromFramework) {
+    for (const item of uniqueItemsToCopy) {
         const sourcePath = path.join(wpmooFrameworkBaseDir, item);
         const destPath = path.join(targetDir, item);
         if (await fs.pathExists(sourcePath)) {
-            // If it's a directory, recursively copy and process. Otherwise, just copy the file.
             const stats = await fs.stat(sourcePath);
             if (stats.isDirectory()) {
-                await copyAndProcessDirectory(sourcePath, destPath, placeholders);
+                await fs.ensureDir(destPath); // Ensure directory exists before copying contents
+                // Recursively copy and process, but exclude .gitkeep files from empty directories
+                const itemsInDir = await fs.readdir(sourcePath);
+                for (const subItem of itemsInDir) {
+                    if (subItem === '.gitkeep') continue;
+                    const subSourcePath = path.join(sourcePath, subItem);
+                    const subDestPath = path.join(destPath, subItem);
+                    const subStats = await fs.stat(subSourcePath);
+                    if (subStats.isDirectory()) {
+                        await copyAndProcessDirectory(subSourcePath, subDestPath, placeholders);
+                    } else {
+                        await copyAndProcessFile(subSourcePath, subDestPath, placeholders);
+                    }
+                }
             } else {
                 await copyAndProcessFile(sourcePath, destPath, placeholders);
             }
@@ -208,6 +211,39 @@ async function run() {
     const srcSource = path.join(templateBaseDir, 'plugin', 'src');
     const srcDest = path.join(targetDir, 'src');
     await copyAndProcessDirectory(srcSource, srcDest, placeholders);
+
+    // Configure composer to use local framework if found
+    console.log(chalk.blue('\nDetected local WPMoo framework at ' + localFrameworkPath));
+    console.log('  - Configuring composer to use local framework...');
+
+    const composerJsonPath = path.join(targetDir, 'composer.json');
+    const composerJson = await fs.readJson(composerJsonPath);
+
+    composerJson.repositories = composerJson.repositories || [];
+    composerJson.repositories.push({
+        type: "path",
+        url: path.relative(targetDir, localFrameworkPath),
+        options: {
+            symlink: true
+        }
+    });
+
+    // Use dev-main version for local development
+    if (composerJson.require && composerJson.require['wpmoo/wpmoo']) {
+         composerJson.require['wpmoo/wpmoo'] = 'dev-dev';
+    }
+
+    await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
+
+    // Clean up composer.json (remove scripts, filter dev dependencies)
+    await cleanupComposerJson(composerJsonPath, {
+        writeln: (msg) => console.log(msg),
+        error: (msg) => console.error(msg),
+        warning: (msg) => console.warn(msg),
+        note: (msg) => console.log(msg),
+        log: (msg) => console.log(msg),
+        // Add other SymfonyStyle-like methods if used in cleanupComposerJson
+    });
 
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
@@ -377,6 +413,44 @@ async function findWpmooFrameworkPath(startDir) {
     return null; // Return null if the framework path is not found
 }
 
+
+/**
+ * Cleans up the composer.json file by removing unnecessary scripts and filtering dev dependencies.
+ *
+ * @param {string} composerJsonPath The path to the composer.json file.
+ * @param {SymfonyStyle} io The SymfonyStyle instance for output.
+ */
+async function cleanupComposerJson(composerJsonPath, io) {
+    io.writeln(chalk.blue('\nCleaning up composer.json...'));
+    try {
+        const composerJson = await fs.readJson(composerJsonPath);
+
+        // Remove all scripts
+        if (composerJson.scripts) {
+            delete composerJson.scripts;
+            io.writeln(chalk.gray('  - Removed scripts block.'));
+        }
+
+        // Filter require-dev dependencies
+        if (composerJson['require-dev']) {
+            const allowedDevDependencies = ['wpmoo/wpmoo-cli', 'scssphp/scssphp'];
+            const filteredRequireDev = {};
+            for (const [pkg, version] of Object.entries(composerJson['require-dev'])) {
+                if (allowedDevDependencies.includes(pkg)) {
+                    filteredRequireDev[pkg] = version;
+                }
+            }
+            composerJson['require-dev'] = filteredRequireDev;
+            io.writeln(chalk.gray('  - Filtered require-dev dependencies.'));
+        }
+
+        await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
+        io.writeln(chalk.green('✓ composer.json cleaned up successfully.'));
+    } catch (error) {
+        io.error(chalk.red(`✗ Failed to clean up composer.json: ${error.message}`));
+        throw error; // Re-throw to indicate a critical failure
+    }
+}
 
 run().catch((error) => {
     console.error(chalk.red('An error occurred:'), error);
