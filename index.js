@@ -113,7 +113,7 @@ async function run() {
         console.error(chalk.red('✗ Could not find local WPMoo framework (wpmoo-org/wpmoo). Aborting template setup.'));
         process.exit(1);
     }
-    const templateBaseDir = path.join(wpmooFrameworkPath, 'starter-templates');
+    const templateBaseDir = path.join(__dirname, 'templates');
     console.log(chalk.blue(`  - Using templates from: ${templateBaseDir}`));
 
     const placeholders = {
