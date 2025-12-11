@@ -3,8 +3,8 @@
  * Plugin Name: PROJECT_NAME
  * Description: PROJECT_DESCRIPTION
  * Version: 0.1.0
- * Author: AUTHOR_NAME
- * Text Domain: TEXT_DOMAIN
+ * Author: PROJECT_AUTHOR_NAME
+ * Text Domain: PROJECT_TEXT_DOMAIN
  * License: GPL-2.0-or-later
  *
  * @package PROJECT_NAMESPACE
