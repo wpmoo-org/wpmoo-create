@@ -2,7 +2,7 @@
 /**
  * Theme functions and definitions.
  *
- * @package PROJECT_NAMESPACE
+ * @package PROJECT_TEXT_DOMAIN
  */
 
 namespace PROJECT_NAMESPACE;

@@ -2,28 +2,24 @@
 
 namespace PROJECT_NAMESPACE;
 
-use WPMoo\Core\App;
-use WPMoo\Core\View;
-
 if ( ! defined( 'ABSPATH' ) ) {
     wp_die(); // Exit if accessed directly
 }
 
-class Plugin extends App
+class Plugin
 {
     /**
      * Initializes the plugin.
      */
     public function __construct()
     {
-        parent::__construct();
-        $this->loadHooks();
+        $this->load_hooks();
     }
 
     /**
      * Loads WordPress hooks.
      */
-    protected function loadHooks()
+    protected function load_hooks()
     {
         // Example: Add a shortcode
         add_shortcode('PROJECT_SLUG_hello_shortcode', [$this, 'PROJECT_FUNCTION_PREFIX_hello_world_shortcode']);
@@ -51,12 +47,10 @@ class Plugin extends App
         // For now, it's just a placeholder notice.
         $screen = get_current_screen();
         if (strpos($screen->id, 'PROJECT_SLUG_screen_id') !== false) { // Check if we are on our plugin's admin page
-            $view = new View();
-            echo $view->render('@WPMoo-samples/samples-notice', [
-                'plugin_name' => 'PROJECT_NAME',
-                'samples_status' => 'disabled', // Placeholder, would come from settings
-                'activation_url' => '#' // Placeholder for actual activation URL
-            ]);
+            // Display a simple admin notice using standard WordPress approach
+            echo '<div class="notice notice-info is-dismissible">';
+            echo '<p><strong>' . esc_html__('PROJECT_NAME', 'PROJECT_TEXT_DOMAIN') . '</strong> ' . esc_html__('notice text.', 'PROJECT_TEXT_DOMAIN') . '</p>';
+            echo '</div>';
         }
     }
 }

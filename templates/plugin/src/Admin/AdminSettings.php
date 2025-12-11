@@ -24,26 +24,46 @@ class AdminSettings {
 	/**
 	 * Register the admin page.
 	 */	public function register_page() {
+		
 		// Create the main admin page.
-		Moo::page( 'PROJECT_TEXT_DOMAIN-settings', 'PROJECT_NAME' )
-			->menu_icon( 'dashicons-admin-generic' );
+		Moo::page( 'PROJECT_FUNCTION_PREFIX-settings', __( 'WPMoo Settings', 'PROJECT_TEXT_DOMAIN' ) )
+		->capability( 'manage_options' )
+		->description( __( 'Configure WPMoo Framework settings', 'PROJECT_TEXT_DOMAIN' ) )
+		->menu_slug( 'PROJECT_TEXT_DOMAIN' )
+		->menu_position( 21 )
+		->menu_icon( 'dashicons-admin-generic' );
 
-		// Create a default tab with a welcome message
-		Moo::tabs( 'PROJECT_TEXT_DOMAIN_main_tabs' )
-			->parent( 'PROJECT_TEXT_DOMAIN-settings' )
-			->items(
-				array(
-					array(
-						'id'      => 'general',
-						'title'   => __( 'General', 'PROJECT_TEXT_DOMAIN' ),
-						'content' => array(
-							Moo::field( 'message', 'welcome_message' )
-								->label( __( 'Welcome', 'PROJECT_TEXT_DOMAIN' ) )
-								->default( 'Welcome to PROJECT_NAME Settings' )
-								->description( __( 'This is a sample settings page created with WPMoo.', 'PROJECT_TEXT_DOMAIN' ) ),
-						),
-					),
-				)
-			);
+		// Create tabs for the settings page
+		Moo::tabs( 'PROJECT_FUNCTION_PREFIX_main_tabs' )
+		->parent( 'PROJECT_TEXT_DOMAIN-settings' )  // Link to the settings page
+		->items(
+			[
+				[
+					'id' => 'general',
+					'title' => __( 'General Settings', 'PROJECT_TEXT_DOMAIN' ),
+					'content' => [
+						Field::input( 'site_title' )
+							->label( __( 'Site Title', 'PROJECT_TEXT_DOMAIN' ) )
+							->placeholder( __( 'Enter your site title', 'PROJECT_TEXT_DOMAIN' ) ),
+						Field::textarea( 'site_description' )
+							->label( __( 'Site Description', 'PROJECT_TEXT_DOMAIN' ) )
+							->placeholder( __( 'Enter site description', 'PROJECT_TEXT_DOMAIN' ) ),
+						Field::toggle( 'enable_cache' )
+							->label( __( 'Enable Caching', 'PROJECT_TEXT_DOMAIN' ) ),
+					],
+				],
+				[
+					'id' => 'advanced',
+					'title' => __( 'Advanced Settings', 'PROJECT_TEXT_DOMAIN' ),
+					'content' => [
+						Field::input( 'cache_duration' )
+							->label( __( 'Cache Duration (seconds)', 'PROJECT_TEXT_DOMAIN' ) )
+							->placeholder( __( 'Enter cache duration', 'PROJECT_TEXT_DOMAIN' ) ),
+						Field::toggle( 'enable_debug' )
+							->label( __( 'Enable Debug Mode', 'PROJECT_TEXT_DOMAIN' ) ),
+					],
+				],
+			]
+		);
 	}
 }
