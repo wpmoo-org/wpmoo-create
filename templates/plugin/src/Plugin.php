@@ -5,18 +5,8 @@ namespace PROJECT_NAMESPACE;
 use WPMoo\Core\App;
 use WPMoo\Core\View;
 
-/**
- * Plugin Name: PROJECT_NAME
- * Description: PROJECT_DESCRIPTION
- * Version: 1.0.0
- * Author: PROJECT_AUTHOR_NAME
- * Author URI: PROJECT_AUTHOR_EMAIL
- * License: GPL-2.0-or-later
- * Text Domain: PROJECT_TEXT_DOMAIN
- */
-
 if ( ! defined( 'ABSPATH' ) ) {
-    exit; // Exit if accessed directly
+    wp_die(); // Exit if accessed directly
 }
 
 class Plugin extends App
@@ -36,10 +26,10 @@ class Plugin extends App
     protected function loadHooks()
     {
         // Example: Add a shortcode
-        add_shortcode('PROJECT_SLUG_hello_shortcode', [$this, 'PROJECT_FUNCTION_NAME_hello_world_shortcode']);
+        add_shortcode('PROJECT_SLUG_hello_shortcode', [$this, 'PROJECT_FUNCTION_PREFIX_hello_world_shortcode']);
 
         // Example: Admin notice for samples
-        add_action('admin_notices', [$this, 'PROJECT_FUNCTION_NAME_admin_notice']);
+        add_action('admin_notices', [$this, 'PROJECT_FUNCTION_PREFIX_admin_notice']);
     }
 
     /**
@@ -47,7 +37,7 @@ class Plugin extends App
      *
      * @return string
      */
-    public function PROJECT_FUNCTION_NAME_hello_world_shortcode(): string
+    public function PROJECT_FUNCTION_PREFIX_hello_world_shortcode(): string
     {
         return 'Hello from PROJECT_NAME!';
     }
@@ -55,7 +45,7 @@ class Plugin extends App
     /**
      * Displays an admin notice regarding samples.
      */
-    public function PROJECT_FUNCTION_NAME_admin_notice()
+    public function PROJECT_FUNCTION_PREFIX_admin_notice()
     {
         // In a real scenario, this would check a setting to see if samples are active.
         // For now, it's just a placeholder notice.
@@ -72,7 +62,7 @@ class Plugin extends App
 }
 
 // Bootstrap the plugin
-function PROJECT_FUNCTION_NAME_run() {
+function PROJECT_FUNCTION_PREFIX_run() {
     return Plugin::instance();
 }
-add_action('plugins_loaded', 'PROJECT_FUNCTION_NAME_run');
+add_action('plugins_loaded', 'PROJECT_FUNCTION_PREFIX_run');

@@ -223,9 +223,7 @@ async function run() {
         'PROJECT_MAIN_FILE_NAME': mainFileName || '',
         'INITIAL_THEME': "amber", // Default to amber
         'PROJECT_SLUG': projectSlug,
-        'PROJECT_FUNCTION_NAME': snakeCase(projectName),
-        'PROJECT_ACTIVATE_FUNCTION_NAME': `activate_${snakeCase(projectName)}`,
-        'PROJECT_DEACTIVATE_FUNCTION_NAME': `deactivate_${snakeCase(projectName)}`,
+        'PROJECT_FUNCTION_PREFIX': snakeCase(projectName),
     };
 
     const localFrameworkPath = await findWpmooFrameworkPath(process.cwd());
@@ -451,10 +449,12 @@ async function copyAndProcessFile(sourcePath, destPath, placeholders) {
         content = content.replace(regex, value);
     }
 
-    // Handle special cases for template-specific placeholders
-    // Replace placeholders in the format PROJECT_NAMESPACE, PROJECT_TEXT_DOMAIN
-    content = content.replace(/PROJECT_NAMESPACE/g, placeholders['PROJECT_TEXT_DOMAIN']);
+    // Handle special cases for template-specific placeholders that don't follow word boundaries
+    // These are used when the placeholder is followed by other alphanumeric characters (e.g. PROJECT_SLUG_hello, PROJECT_FUNCTION_NAME_func)
+    content = content.replace(/PROJECT_NAMESPACE/g, placeholders['PROJECT_NAMESPACE']);
     content = content.replace(/PROJECT_TEXT_DOMAIN/g, placeholders['PROJECT_TEXT_DOMAIN']);
+    content = content.replace(/PROJECT_SLUG/g, placeholders['PROJECT_SLUG']);
+    content = content.replace(/PROJECT_FUNCTION_PREFIX/g, placeholders['PROJECT_FUNCTION_PREFIX']);
 
     await fs.writeFile(destPath, content);
 }
