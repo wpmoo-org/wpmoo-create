@@ -113,12 +113,12 @@ async function run() {
         'PROJECT_TYPE': projectType.toLowerCase(),
         'PROJECT_NAME': projectName,
         'PROJECT_DESCRIPTION': projectDescription,
-        'AUTHOR_NAME': authorName,
-        'AUTHOR_EMAIL': authorEmail,
-        'NAMESPACE': projectNamespace, // Keep this for other PHP templates
-        'NAMESPACE_VALUE_WITH_SLASH': projectNamespace + '\\', // New placeholder for composer.json
-        'TEXT_DOMAIN': textDomain,
-        'MAIN_FILE_NAME': mainFileName || '',
+        'PROJECT_AUTHOR_NAME': authorName,
+        'PROJECT_AUTHOR_EMAIL': authorEmail,
+        'PROJECT_NAMESPACE': projectNamespace, // For PHP templates
+        'PROJECT_NAMESPACE_WITH_SLASH': JSON.stringify(projectNamespace + '\\').slice(1, -1), // For composer.json
+        'PROJECT_TEXT_DOMAIN': textDomain,
+        'PROJECT_MAIN_FILE_NAME': mainFileName || '',
         'INITIAL_THEME': "amber", // Default to amber
         'PROJECT_SLUG': projectSlug,
         'PROJECT_FUNCTION_NAME': snakeCase(projectName),
@@ -214,28 +214,7 @@ async function run() {
     const srcDest = path.join(targetDir, 'src');
     await copyAndProcessDirectory(srcSource, srcDest, placeholders);
 
-    // Configure composer to use local framework if found
-    console.log(chalk.blue('\nDetected local WPMoo framework at ' + localFrameworkPath));
-    console.log('  - Configuring composer to use local framework...');
 
-    const composerJsonPath = path.join(targetDir, 'composer.json');
-    const composerJson = await fs.readJson(composerJsonPath);
-
-    composerJson.repositories = composerJson.repositories || [];
-    composerJson.repositories.push({
-        type: "path",
-        url: path.relative(targetDir, localFrameworkPath),
-        options: {
-            symlink: true
-        }
-    });
-
-    // Use dev-main version for local development
-    if (composerJson.require && composerJson.require['wpmoo/wpmoo']) {
-         composerJson.require['wpmoo/wpmoo'] = 'dev-dev';
-    }
-
-    await fs.writeJson(composerJsonPath, composerJson, { spaces: 2 });
 
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
@@ -319,9 +298,8 @@ async function run() {
     // --- Run WPMoo CLI rename command ---
     console.log(chalk.blue('\nRunning WPMoo CLI rename command...'));
     try {
-        const wpmooCliPath = path.resolve(__dirname, '../../wpmoo-cli/bin/moo'); // Path to moo executable from create-wpmoo context
-        const relativeWpmooCliPath = path.relative(targetDir, wpmooCliPath); // Path relative to the new project
-        const renameCommand = `php ${relativeWpmooCliPath} rename`;
+        const wpmooCliPath = path.resolve(__dirname, '../wpmoo-cli/bin/moo'); // Absolute path to moo executable
+        const renameCommand = `php ${wpmooCliPath} rename`;
 
         // Construct the input string for the interactive rename command
         // Plugin name, Namespace, Text Domain, and final 'yes' confirmation

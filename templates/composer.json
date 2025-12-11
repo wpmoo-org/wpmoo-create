@@ -5,8 +5,8 @@
   "homepage": "https://your-plugin-homepage.com",
   "authors": [
     {
-      "name": "AUTHOR_NAME",
-      "email": "AUTHOR_EMAIL"
+      "name": "PROJECT_AUTHOR_NAME",
+      "email": "PROJECT_AUTHOR_EMAIL"
     }
   ],
   "keywords": [
@@ -24,7 +24,7 @@
   },
   "autoload": {
     "psr-4": {
-      "NAMESPACE_VALUE_WITH_SLASH": "src/"
+      "PROJECT_NAMESPACE_WITH_SLASH": "src/"
     }
   },
   "require-dev": {
