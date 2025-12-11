@@ -107,10 +107,16 @@ async function run() {
     await fs.ensureDir(targetDir);
 
     const __dirname = path.dirname(fileURLToPath(import.meta.url));
-    const templateBaseDir = path.join(__dirname, 'templates');
+    // Locate the starter templates within the WPMoo framework
+    const wpmooFrameworkPath = await findWpmooFrameworkPath(process.cwd());
+    if (!wpmooFrameworkPath) {
+        console.error(chalk.red('✗ Could not find local WPMoo framework (wpmoo-org/wpmoo). Aborting template setup.'));
+        process.exit(1);
+    }
+    const templateBaseDir = path.join(wpmooFrameworkPath, 'starter-templates');
+    console.log(chalk.blue(`  - Using templates from: ${templateBaseDir}`));
 
-    const placeholders = {
-        'PROJECT_TYPE': projectType.toLowerCase(),
+    const placeholders = {        'PROJECT_TYPE': projectType.toLowerCase(),
         'PROJECT_NAME': projectName,
         'PROJECT_DESCRIPTION': projectDescription,
         'PROJECT_AUTHOR_NAME': authorName,
@@ -122,6 +128,8 @@ async function run() {
         'INITIAL_THEME': "amber", // Default to amber
         'PROJECT_SLUG': projectSlug,
         'PROJECT_FUNCTION_NAME': snakeCase(projectName),
+        'PROJECT_ACTIVATE_FUNCTION_NAME': `activate_${snakeCase(projectName)}`,
+        'PROJECT_DEACTIVATE_FUNCTION_NAME': `deactivate_${snakeCase(projectName)}`,
     };
 
         const localFrameworkPath = await findWpmooFrameworkPath(process.cwd());
@@ -202,12 +210,12 @@ async function run() {
 
     // Copy main plugin file from wpmoo-create template
     if (projectType === 'Plugin') {
-        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php.tpl'), path.join(targetDir, mainFileName), placeholders);
+        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php'), path.join(targetDir, mainFileName), placeholders);
     } else if (projectType === 'Theme') {
         // TODO: Implement theme specific templates from wpmoo-create
         console.log(chalk.yellow('  - Theme creation is not fully implemented yet. Minimal theme structure copied.'));
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), placeholders);
-        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php.tpl'), path.join(targetDir, 'functions.php'), placeholders);
+        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php'), path.join(targetDir, 'functions.php'), placeholders);
     }
     // Generate minimal src directory from wpmoo-create templates
     const srcSource = path.join(templateBaseDir, 'plugin', 'src');
@@ -325,11 +333,7 @@ async function copyAndProcessDirectory(sourceDir, destDir, placeholders) {
 
     for (const item of items) {
         const sourcePath = path.join(sourceDir, item);
-        let destItemName = item;
-        if (destItemName.endsWith('.tpl')) {
-            destItemName = destItemName.substring(0, destItemName.length - 4);
-        }
-        const destPath = path.join(destDir, destItemName);
+        const destPath = path.join(destDir, item); // No .tpl removal needed
         const stat = await fs.stat(sourcePath);
 
         if (stat.isDirectory()) {
