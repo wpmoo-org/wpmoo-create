@@ -2,10 +2,10 @@
 /**
  * Theme functions and definitions.
  *
- * @package __NAMESPACE__
+ * @package PROJECT_NAMESPACE
  */
 
-namespace __NAMESPACE__;
+namespace PROJECT_NAMESPACE;
 
 use WPMoo\Core\App;
 
@@ -14,12 +14,20 @@ use WPMoo\Core\App;
  */
 class MainTheme {
 
-	// ...
+	/**
+	 * Initialize the theme.
+	 */
+	public function run() {
+		// Initialize theme setup
+		require_once get_template_directory() . '/inc/ThemeSetup.php';
+		\PROJECT_NAMESPACE\Inc\ThemeSetup::init();
+	}
 }
 
 // Bootstrap the theme
 add_action( 'after_setup_theme', function() {
-	MainTheme::instance()->run();
+	$theme = new MainTheme();
+	$theme->run();
 } );
 
 // If this file is called directly, abort.
@@ -36,11 +44,11 @@ if ( ! defined( 'ABSPATH' ) ) {
 require_once __DIR__ . '/vendor/autoload.php';
 
 // Initialize the theme
-\WPMoo\WordPress\Bootstrap::initialize( __FILE__, '__TEXT_DOMAIN__', '0.1.0' );
+\WPMoo\WordPress\Bootstrap::initialize( __FILE__, 'PROJECT_TEXT_DOMAIN', '0.1.0' );
 
 // If this theme instance is the "winner" chosen by the loader, boot the framework.
 // Note: This check ensures that WPMoo is only booted once, by the theme
 // that has the highest WPMoo version requirement.
 if ( defined( 'WPMOO_IS_LOADING_WINNER' ) ) {
-	\WPMoo\WordPress\Bootstrap::instance()->boot( __FILE__, '__TEXT_DOMAIN__' );
+	\WPMoo\WordPress\Bootstrap::instance()->boot( __FILE__, 'PROJECT_TEXT_DOMAIN' );
 }

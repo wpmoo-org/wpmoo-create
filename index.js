@@ -12,9 +12,77 @@ const slugify = (str) => str.toLowerCase().trim().replace(/[^\w\s-]/g, '').repla
 const pascalCase = (str) => str.replace(/\w+/g, (w) => w[0].toUpperCase() + w.slice(1).toLowerCase()).replace(/\s/g, '');
 const snakeCase = (str) => slugify(str).replace(/-/g, '_');
 
+/**
+ * Validates that the directory doesn't already exist
+ * @param {string} dirPath - Path to the directory to validate
+ * @returns {Promise<boolean>} - True if directory doesn't exist
+ */
+async function validateDirectory(dirPath) {
+    const exists = await fs.pathExists(dirPath);
+    if (exists) {
+        return 'Directory already exists. Please choose a different name.';
+    }
+    return true;
+}
+
+/**
+ * Validates that the namespace follows PHP namespace standards
+ * @param {string} namespace - Namespace to validate
+ * @returns {boolean|string} - True if valid, error message if invalid
+ */
+function validateNamespace(namespace) {
+    if (!namespace) return 'Namespace cannot be empty.';
+
+    // Basic validation for PHP namespace format
+    const namespaceRegex = /^[a-zA-Z][a-zA-Z0-9_]*(\\[a-zA-Z][a-zA-Z0-9_]*)*$/;
+
+    if (!namespaceRegex.test(namespace)) {
+        return 'Invalid namespace format. Use alphanumeric characters and backslashes only.';
+    }
+
+    return true;
+}
+
+/**
+ * Checks if composer is available
+ * @returns {boolean} - True if composer is available
+ */
+function isComposerAvailable() {
+    try {
+        execSync('composer --version', { stdio: 'pipe' });
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
+/**
+ * Checks if npm is available
+ * @returns {boolean} - True if npm is available
+ */
+function isNpmAvailable() {
+    try {
+        execSync('npm --version', { stdio: 'pipe' });
+        return true;
+    } catch (error) {
+        return false;
+    }
+}
+
 async function run() {
     console.log(chalk.blue('>>> Welcome to the WPMoo project creator! <<<'));
     console.log('');
+
+    // Check for required tools
+    const hasComposer = isComposerAvailable();
+    const hasNpm = isNpmAvailable();
+
+    if (!hasComposer) {
+        console.warn(chalk.yellow('⚠ composer is not installed or not in PATH. Dependencies installation will be skipped.'));
+    }
+    if (!hasNpm) {
+        console.warn(chalk.yellow('⚠ npm is not installed or not in PATH. Dependencies installation will be skipped.'));
+    }
 
     const answers = await inquirer.prompt([
         {
@@ -28,7 +96,15 @@ async function run() {
             type: 'input',
             name: 'projectName',
             message: (answers) => `Enter your ${answers.projectType} Name`,
-            validate: (input) => input ? true : 'Project name cannot be empty.',
+            validate: (input) => {
+                if (!input) return 'Project name cannot be empty.';
+
+                // Check if project name contains characters that would create an invalid slug
+                const slug = slugify(input);
+                if (!slug) return 'Project name must contain valid characters for a slug.';
+
+                return true;
+            },
         },
         {
             type: 'input',
@@ -39,19 +115,23 @@ async function run() {
             type: 'input',
             name: 'authorName',
             message: 'Enter Author Name:',
+            validate: (input) => input ? true : 'Author name cannot be empty.',
         },
         {
             type: 'input',
             name: 'authorEmail',
             message: 'Enter Author Email:',
-            validate: (input) => /.+@.+/.test(input) ? true : 'Please enter a valid email address.',
+            validate: (input) => {
+                const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+                return emailRegex.test(input) ? true : 'Please enter a valid email address.';
+            },
         },
         {
             type: 'input',
             name: 'projectNamespace',
             message: 'Enter the PHP Namespace:',
             default: (answers) => pascalCase(answers.projectName),
-            validate: (input) => input ? true : 'Namespace cannot be empty.',
+            validate: validateNamespace,
         },
         {
             type: 'input',
@@ -66,7 +146,22 @@ async function run() {
             message: 'Enter the main plugin file name (e.g., your-plugin.php):',
             default: (answers) => `${slugify(answers.projectName)}.php`,
             when: (answers) => answers.projectType === 'Plugin',
-            validate: (input) => input ? true : 'Main plugin file name cannot be empty.',
+            validate: (input) => {
+                if (!input) return 'Main plugin file name cannot be empty.';
+
+                // Validate filename format
+                if (!/^[a-z0-9_-]+\.php$/.test(input)) {
+                    return 'Invalid filename. Use lowercase letters, numbers, underscores, and hyphens only, ending with .php';
+                }
+
+                return true;
+            },
+        },
+        {
+            type: 'confirm',
+            name: 'shouldCreateGitRepo',
+            message: 'Initialize a Git repository?',
+            default: true,
         }
     ]);
 
@@ -212,37 +307,69 @@ async function run() {
     // Copy main plugin file from wpmoo-create template
     if (projectType === 'Plugin') {
         await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php'), path.join(targetDir, mainFileName), placeholders);
+        // Generate minimal src directory from wpmoo-create templates for plugins
+        const srcSource = path.join(templateBaseDir, 'plugin', 'src');
+        const srcDest = path.join(targetDir, 'src');
+        await copyAndProcessDirectory(srcSource, srcDest, placeholders);
     } else if (projectType === 'Theme') {
-        // TODO: Implement theme specific templates from wpmoo-create
-        console.log(chalk.yellow('  - Theme creation is not fully implemented yet. Minimal theme structure copied.'));
+        console.log(chalk.blue('  - Creating theme files...'));
         await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), placeholders);
-        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php'), path.join(targetDir, 'functions.php'), placeholders);
+        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php.tpl'), path.join(targetDir, 'functions.php'), placeholders);
+        // For themes, we might want to create a different structure, but for now,
+        // we'll create a basic inc directory for theme functions
+        const themeSrcSource = path.join(templateBaseDir, 'theme', 'inc');
+        if (await fs.pathExists(themeSrcSource)) {
+            const themeSrcDest = path.join(targetDir, 'inc');
+            await copyAndProcessDirectory(themeSrcSource, themeSrcDest, placeholders);
+        } else {
+            // Create a basic theme structure if inc directory doesn't exist
+            const incDir = path.join(targetDir, 'inc');
+            await fs.ensureDir(incDir);
+            console.log(chalk.blue('  - Created basic inc directory for theme functions'));
+        }
     }
-    // Generate minimal src directory from wpmoo-create templates
-    const srcSource = path.join(templateBaseDir, 'plugin', 'src');
-    const srcDest = path.join(targetDir, 'src');
-    await copyAndProcessDirectory(srcSource, srcDest, placeholders);
 
 
 
     // Run composer install
     console.log(chalk.blue('\nRunning composer install... This may take a moment.'));
-    try {
-        execSync('composer install --dev', { cwd: targetDir, stdio: 'inherit' });
-        console.log(chalk.green('✓ Composer dependencies installed.'));
-    } catch (error) {
-        console.error(chalk.red('✗ Composer install failed:'), error.message);
-        process.exit(1);
+    if (hasComposer) {
+        try {
+            execSync('composer install --dev', { cwd: targetDir, stdio: 'inherit' });
+            console.log(chalk.green('✓ Composer dependencies installed.'));
+        } catch (error) {
+            console.error(chalk.red('✗ Composer install failed:'), error.message);
+            process.exit(1);
+        }
+    } else {
+        console.log(chalk.yellow('⚠ Skipping composer install as composer is not available.'));
     }
 
     // Run npm install
     console.log(chalk.blue('\nRunning npm install... This may take a moment.'));
-    try {
-        execSync('npm install', { cwd: targetDir, stdio: 'inherit' });
-        console.log(chalk.green('✓ Node dependencies installed.'));
-    } catch (error) {
-        console.error(chalk.red('✗ NPM install failed:'), error.message);
-        // We don't exit here, as the project is still usable, just dev tools might be missing
+    if (hasNpm) {
+        try {
+            execSync('npm install', { cwd: targetDir, stdio: 'inherit' });
+            console.log(chalk.green('✓ Node dependencies installed.'));
+        } catch (error) {
+            console.error(chalk.red('✗ NPM install failed:'), error.message);
+            // We don't exit here, as the project is still usable, just dev tools might be missing
+        }
+    } else {
+        console.log(chalk.yellow('⚠ Skipping npm install as npm is not available.'));
+    }
+
+    // Initialize Git repository if requested
+    if (answers.shouldCreateGitRepo) {
+        console.log(chalk.blue('\nInitializing Git repository...'));
+        try {
+            execSync('git init', { cwd: targetDir, stdio: 'pipe' });
+            execSync('git add .', { cwd: targetDir, stdio: 'pipe' });
+            execSync('git commit -m "Initial commit: WPMoo project"', { cwd: targetDir, stdio: 'pipe' });
+            console.log(chalk.green('✓ Git repository initialized and initial commit created.'));
+        } catch (error) {
+            console.warn(chalk.yellow('⚠ Failed to initialize Git repository:'), error.message);
+        }
     }
 
     // --- Post-install setup ---
@@ -323,6 +450,11 @@ async function copyAndProcessFile(sourcePath, destPath, placeholders) {
         const regex = new RegExp(`\\b${key}\\b`, 'g'); // Use word boundaries to match exact key
         content = content.replace(regex, value);
     }
+
+    // Handle special cases for template-specific placeholders
+    // Replace placeholders in the format PROJECT_NAMESPACE, PROJECT_TEXT_DOMAIN
+    content = content.replace(/PROJECT_NAMESPACE/g, placeholders['PROJECT_TEXT_DOMAIN']);
+    content = content.replace(/PROJECT_TEXT_DOMAIN/g, placeholders['PROJECT_TEXT_DOMAIN']);
 
     await fs.writeFile(destPath, content);
 }
