@@ -1,30 +1,30 @@
 {
-  "name": "wpmoo/__PROJECT_SLUG__",
-  "description": "__PROJECT_DESCRIPTION__",
+  "name": "wpmoo/PROJECT_SLUG",
+  "description": "PROJECT_DESCRIPTION",
   "license": "GPL-2.0-or-later",
   "homepage": "https://your-plugin-homepage.com",
   "authors": [
     {
-      "name": "__AUTHOR_NAME__",
-      "email": "__AUTHOR_EMAIL__"
+      "name": "PROJECT_AUTHOR_NAME",
+      "email": "PROJECT_AUTHOR_EMAIL"
     }
   ],
   "keywords": [
     "wordpress",
-    "__PROJECT_TYPE__"
+    "PROJECT_TYPE"
   ],
   "support": {
-    "issues": "https://github.com/__PROJECT_GITHUB_ORG__/__PROJECT_SLUG__/issues",
-    "source": "https://github.com/__PROJECT_GITHUB_ORG__/__PROJECT_SLUG__"
+    "issues": "https://github.com/PROJECT_GITHUB_ORG/PROJECT_SLUG/issues",
+    "source": "https://github.com/PROJECT_GITHUB_ORG/PROJECT_SLUG"
   },
-  "type": "wordpress-__PROJECT_TYPE__",
+  "type": "wordpress-PROJECT_TYPE",
   "require": {
     "php": ">=7.4",
     "wpmoo/wpmoo": "dev-dev"
   },
   "autoload": {
     "psr-4": {
-      "__NAMESPACE_FOR_COMPOSER__": "src/"
+      "PROJECT_NAMESPACE_WITH_SLASH": "src/"
     }
   },
   "require-dev": {

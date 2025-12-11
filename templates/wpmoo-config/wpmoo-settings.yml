@@ -2,7 +2,7 @@
 project:
   name: '{{PROJECT_NAME}}'
   namespace: '{{NAMESPACE}}'
-  text_domain: '{{TEXT_DOMAIN}}'
+  text_domain: 'PROJECT_TEXT_DOMAIN}}'
 
 # Development environment specific settings.
 dev:
@@ -23,7 +23,7 @@ dist:
   theme: "amber"
   zip:
     enabled: true
-    filename: "{{TEXT_DOMAIN}}-{{version}}.zip"
+    filename: "PROJECT_TEXT_DOMAIN}}-{{version}}.zip"
   # Vendor packages to include/exclude in the distribution
   vendor_packages:
     include: # List of vendor packages to definitely include

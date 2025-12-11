@@ -2,10 +2,10 @@
 /**
  * Fired during plugin activation.
  *
- * @package __NAMESPACE__\Setup
+ * @package PROJECT_NAMESPACE\Setup
  */
 
-namespace __NAMESPACE__\Setup;
+namespace PROJECT_NAMESPACE\Setup;
 
 /**
  * Fired during plugin activation.

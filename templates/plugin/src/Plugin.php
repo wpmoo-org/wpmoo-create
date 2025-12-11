@@ -1,18 +1,18 @@
 <?php
 
-namespace __NAMESPACE__;
+namespace PROJECT_NAMESPACE;
 
 use WPMoo\Core\App;
 use WPMoo\Core\View;
 
 /**
- * Plugin Name: __PROJECT_NAME__
- * Description: __PROJECT_DESCRIPTION__
+ * Plugin Name: PROJECT_NAME
+ * Description: PROJECT_DESCRIPTION
  * Version: 1.0.0
- * Author: __AUTHOR_NAME__
- * Author URI: __AUTHOR_EMAIL__
+ * Author: AUTHOR_NAME
+ * Author URI: AUTHOR_EMAIL
  * License: GPL-2.0-or-later
- * Text Domain: __TEXT_DOMAIN__
+ * Text Domain: TEXT_DOMAIN
  */
 
 if ( ! defined( 'ABSPATH' ) ) {
@@ -36,7 +36,7 @@ class Plugin extends App
     protected function loadHooks()
     {
         // Example: Add a shortcode
-        add_shortcode('__PROJECT_SLUG_HELLO_SHORTCODE__', [$this, 'helloWorldShortcode']);
+        add_shortcode('PROJECT_SLUG_HELLO_SHORTCODE', [$this, 'helloWorldShortcode']);
 
         // Example: Admin notice for samples
         add_action('admin_notices', [$this, 'samplesAdminNotice']);
@@ -49,7 +49,7 @@ class Plugin extends App
      */
     public function helloWorldShortcode(): string
     {
-        return 'Hello from __PROJECT_NAME__!';
+        return 'Hello from PROJECT_NAME!';
     }
 
     /**
@@ -60,10 +60,10 @@ class Plugin extends App
         // In a real scenario, this would check a setting to see if samples are active.
         // For now, it's just a placeholder notice.
         $screen = get_current_screen();
-        if (strpos($screen->id, '__PROJECT_SLUG_SCREEN_ID__') !== false) { // Check if we are on our plugin's admin page
+        if (strpos($screen->id, 'PROJECT_SLUG_SCREEN_ID') !== false) { // Check if we are on our plugin's admin page
             $view = new View();
             echo $view->render('@WPMoo-samples/samples-notice', [
-                'plugin_name' => '__PROJECT_NAME__',
+                'plugin_name' => 'PROJECT_NAME',
                 'samples_status' => 'disabled', // Placeholder, would come from settings
                 'activation_url' => '#' // Placeholder for actual activation URL
             ]);
@@ -72,7 +72,7 @@ class Plugin extends App
 }
 
 // Bootstrap the plugin
-function __PROJECT_FUNCTION_NAME_RUN__() {
+function PROJECT_FUNCTION_NAME_RUN() {
     return Plugin::instance();
 }
-add_action('plugins_loaded', '__PROJECT_FUNCTION_NAME_RUN__');
+add_action('plugins_loaded', 'PROJECT_FUNCTION_NAME_RUN');

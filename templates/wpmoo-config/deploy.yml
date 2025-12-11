@@ -3,7 +3,7 @@ dist:
   theme: "amber"
   zip:
     enabled: true
-    filename: "{{TEXT_DOMAIN}}-{{version}}.zip"
+    filename: "PROJECT_TEXT_DOMAIN}}-{{version}}.zip"
   # Vendor packages to include/exclude in the distribution
   vendor_packages:
     include: # List of vendor packages to definitely include

@@ -2,10 +2,10 @@
 /**
  * Define the internationalization functionality.
  *
- * @package __NAMESPACE__\Setup
+ * @package PROJECT_NAMESPACE\Setup
  */
 
-namespace __NAMESPACE__\Setup;
+namespace PROJECT_NAMESPACE\Setup;
 
 /**
  * Define the internationalization functionality.
@@ -20,7 +20,7 @@ class I18n {
 	 */
 	public function load_plugin_textdomain() {
 		load_plugin_textdomain(
-			'__TEXT_DOMAIN__',
+			'PROJECT_TEXT_DOMAIN',
 			false,
 			dirname( dirname( plugin_basename( __FILE__ ) ) ) . '/languages/'
 		);
