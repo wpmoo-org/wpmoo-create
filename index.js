@@ -269,64 +269,25 @@ async function run() {
     // Remove duplicates
     const uniqueItemsToCopy = [...new Set(combinedItemsToCopy)];
 
-    // Copy selected files/directories from WPMoo framework
-    for (const item of uniqueItemsToCopy) {
-        const sourcePath = path.join(wpmooFrameworkBaseDir, item);
-        const destPath = path.join(targetDir, item);
-        if (await fs.pathExists(sourcePath)) {
-            const stats = await fs.stat(sourcePath);
-            if (stats.isDirectory()) {
-                await fs.ensureDir(destPath); // Ensure directory exists before copying contents
-                // Recursively copy and process, but exclude .gitkeep files from empty directories
-                const itemsInDir = await fs.readdir(sourcePath);
-                for (const subItem of itemsInDir) {
-                    if (subItem === '.gitkeep') continue;
-                    const subSourcePath = path.join(sourcePath, subItem);
-                    const subDestPath = path.join(destPath, subItem);
-                    const subStats = await fs.stat(subSourcePath);
-                    if (subStats.isDirectory()) {
-                        await copyAndProcessDirectory(subSourcePath, subDestPath, placeholders);
-                    } else {
-                        await copyAndProcessFile(subSourcePath, subDestPath, placeholders);
-                    }
-                }
-            } else {
-                await copyAndProcessFile(sourcePath, destPath, placeholders);
-            }
-        } else {
-            console.log(chalk.yellow(`    - Warning: '${item}' not found in WPMoo framework, skipping.`));
-        }
-    }
+    // Recursively copy and process all items from the templates directory
+    await copyAndProcessDirectory(templateBaseDir, targetDir, placeholders, [
+        path.join(templateBaseDir, 'plugin'),
+        path.join(templateBaseDir, 'theme')
+    ]);
 
-    // Copy composer.json from wpmoo-create templates
-    await copyAndProcessFile(path.join(templateBaseDir, 'composer.json'), path.join(targetDir, 'composer.json'), placeholders);
-
-    // Copy README.md from wpmoo-create templates (contains specific instructions for new projects)
-    await copyAndProcessFile(path.join(templateBaseDir, 'README.md'), path.join(targetDir, 'README.md'), placeholders);
-
-    // Copy main plugin file from wpmoo-create template
+    // Special handling for project type (plugin vs. theme)
     if (projectType === 'Plugin') {
-        await copyAndProcessFile(path.join(templateBaseDir, 'plugin', 'plugin.php'), path.join(targetDir, mainFileName), placeholders);
-        // Generate minimal src directory from wpmoo-create templates for plugins
-        const srcSource = path.join(templateBaseDir, 'plugin', 'src');
-        const srcDest = path.join(targetDir, 'src');
-        await copyAndProcessDirectory(srcSource, srcDest, placeholders);
-    } else if (projectType === 'Theme') {
-        console.log(chalk.blue('  - Creating theme files...'));
-        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'style.css'), path.join(targetDir, 'style.css'), placeholders);
-        await copyAndProcessFile(path.join(templateBaseDir, 'theme', 'functions.php.tpl'), path.join(targetDir, 'functions.php'), placeholders);
-        // For themes, we might want to create a different structure, but for now,
-        // we'll create a basic inc directory for theme functions
-        const themeSrcSource = path.join(templateBaseDir, 'theme', 'inc');
-        if (await fs.pathExists(themeSrcSource)) {
-            const themeSrcDest = path.join(targetDir, 'inc');
-            await copyAndProcessDirectory(themeSrcSource, themeSrcDest, placeholders);
-        } else {
-            // Create a basic theme structure if inc directory doesn't exist
-            const incDir = path.join(targetDir, 'inc');
-            await fs.ensureDir(incDir);
-            console.log(chalk.blue('  - Created basic inc directory for theme functions'));
+        const pluginTemplateDir = path.join(templateBaseDir, 'plugin');
+        await copyAndProcessDirectory(pluginTemplateDir, targetDir, placeholders);
+        // Rename the main plugin file
+        const genericPluginFile = path.join(targetDir, 'plugin.php');
+        const finalPluginFile = path.join(targetDir, mainFileName);
+        if (await fs.pathExists(genericPluginFile)) {
+            await fs.rename(genericPluginFile, finalPluginFile);
         }
+    } else if (projectType === 'Theme') {
+        const themeTemplateDir = path.join(templateBaseDir, 'theme');
+        await copyAndProcessDirectory(themeTemplateDir, targetDir, placeholders);
     }
 
 
