@@ -1,5 +1,6 @@
+# -------------------------------------------------------
 # Distribution settings for the WPMoo project.
-
+# -------------------------------------------------------
 
 # Vendor packages to include/exclude in the distribution
 vendor_packages:
