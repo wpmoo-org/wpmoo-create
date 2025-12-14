@@ -269,12 +269,27 @@ async function run() {
     // Remove duplicates
     const uniqueItemsToCopy = [...new Set(combinedItemsToCopy)];
 
-    // Recursively copy and process all items from the templates directory
-    await copyAndProcessDirectory(templateBaseDir, targetDir, placeholders, [
-        path.join(templateBaseDir, 'plugin'),
-        path.join(templateBaseDir, 'theme')
-    ]);
+    // Selectively copy files and shared directories from the template's root
+    const templateItems = await fs.readdir(templateBaseDir);
+    for (const item of templateItems) {
+        const sourcePath = path.join(templateBaseDir, item);
+        const destPath = path.join(targetDir, item);
+        const stat = await fs.stat(sourcePath);
+        
+        // We only want to copy top-level files and shared directories,
+        // not the project-type-specific directories ('plugin', 'theme') in this step.
+        if (item === 'plugin' || item === 'theme') {
+            continue; // Skip
+        }
 
+        if (stat.isDirectory()) {
+            await copyAndProcessDirectory(sourcePath, destPath, placeholders);
+        } else {
+            await copyAndProcessFile(sourcePath, destPath, placeholders);
+        }
+    }
+    
+    // Now, copy the project-type-specific files
     // Special handling for project type (plugin vs. theme)
     if (projectType === 'Plugin') {
         const pluginTemplateDir = path.join(templateBaseDir, 'plugin');
